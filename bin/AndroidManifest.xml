@@ -41,6 +41,9 @@
                   android:label="Register New Account"></activity>
         <activity android:name=".MapsActivity"
                   android:label="Plain Map View"></activity>
+        
+        <activity android:name="com.foursquare.android.nativeoauth.TokenExchangeActivity"
+		      	  android:theme="@android:style/Theme.Dialog"></activity>
         <!-- Goolge Maps API Key -->
 		<meta-data
 		     android:name="com.google.android.maps.v2.API_KEY"
