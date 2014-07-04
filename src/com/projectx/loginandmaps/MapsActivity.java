@@ -1,7 +1,9 @@
 package com.projectx.loginandmaps;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -15,12 +17,18 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends Activity {
@@ -34,6 +42,7 @@ public class MapsActivity extends Activity {
 	private NearbyAdapter mAdapter;
 	private ArrayList<FsqVenue> mNearbyList;
 	private ProgressDialog mProgress;
+	private Map<Integer, Marker> mapList;
 
  
     @Override
@@ -45,6 +54,19 @@ public class MapsActivity extends Activity {
         mListView		= (ListView) findViewById(R.id.lv_places);
         mProgress		= new ProgressDialog(this);
         mProgress.setMessage("Loading data");
+        mapList = new HashMap<Integer, Marker>();
+        
+        mListView.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				Marker m = mapList.get(position); 
+				m.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+				m.showInfoWindow();
+				googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(m.getPosition(), 20));
+			}
+		});
 
         try {
             // Loading map
@@ -58,10 +80,9 @@ public class MapsActivity extends Activity {
     /**
      * function to load map. If map is not created it will create it for you
      * */
-    private void initilizeMap() {
+	private void initilizeMap() {
         if (googleMap == null) {
-            googleMap = ((MapFragment) getFragmentManager().findFragmentById(
-                    R.id.map)).getMap();
+            googleMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
  
             // check if map is created successfully or not
             if (googleMap == null) {
@@ -147,6 +168,8 @@ public class MapsActivity extends Activity {
     					mAdapter.setData(mNearbyList);    			
     	    			mListView.setAdapter(mAdapter);
     	    			setMarkerOnMap();
+    	    			googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+    	    	    			new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 15));
 					}
 				});
     			
@@ -158,16 +181,17 @@ public class MapsActivity extends Activity {
     };
     
     private void setMarkerOnMap() {
+    	googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+    			new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 15));
 		Iterator<FsqVenue> iter = mNearbyList.iterator();
-		while(iter.hasNext()) {
-			FsqVenue venue = iter.next();
+		for (int i=0; i<mAdapter.getCount(); i++) {
+			FsqVenue venue = mNearbyList.get(i);
 			Location loc = venue.location;
 			
 			double lat = loc.getLatitude();
 			double lng = loc.getLongitude();
-			LatLng ll = new LatLng(lat, lng);
-			googleMap.addMarker((new MarkerOptions()).position(ll));
-			
+			Marker marker = googleMap.addMarker((new MarkerOptions()).position(new LatLng(lat, lng)).title(venue.name));
+			mapList.put(i, marker);
 		}
 		
 	}
