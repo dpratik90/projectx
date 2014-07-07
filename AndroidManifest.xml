@@ -19,7 +19,6 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
  
     <!-- Required to show current location -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
  
     <!-- Required OpenGL ES 2.0. for Maps V2 -->
@@ -38,9 +37,13 @@
  
         <!--  Entry for RegisterActivity.class -->
         <activity android:name=".RegisterActivity"
-                  android:label="Register New Account"></activity>
+                  android:label="Register New Account"
+                  ></activity>
         <activity android:name=".MapsActivity"
+            	  android:theme="@style/Theme.AppCompat.Light"
                   android:label="Plain Map View"></activity>
+        <activity android:name="SearchActivity"
+            	  android:label="Select the coordinates"></activity>
         
         <activity android:name="com.foursquare.android.nativeoauth.TokenExchangeActivity"
 		      	  android:theme="@android:style/Theme.Dialog"></activity>

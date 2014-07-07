@@ -4,5 +4,7 @@
     <string name="app_name">LoginAndMaps</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="latitude_longitude">%1$.8f, %2$.8f</string>
+    <string name="play_services_available">Google Play services is available</string>
 
 </resources>
