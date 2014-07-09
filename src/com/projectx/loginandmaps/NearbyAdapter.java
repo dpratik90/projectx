@@ -3,6 +3,8 @@ package com.projectx.loginandmaps;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+import br.com.condesales.models.Category;
+import br.com.condesales.models.Venue;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,14 +14,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 public class NearbyAdapter extends BaseAdapter {
-	private ArrayList<FsqVenue> mVenueList;
+	private ArrayList<Venue> mVenueList;
 	private LayoutInflater mInflater;
 
 	public NearbyAdapter(Context c) {
         mInflater 			= LayoutInflater.from(c);
     }
 
-	public void setData(ArrayList<FsqVenue> poolList) {
+	public void setData(ArrayList<Venue> poolList) {
 		mVenueList = poolList;
 	}
 	
@@ -44,21 +46,21 @@ public class NearbyAdapter extends BaseAdapter {
 			holder = new ViewHolder();
 			
 			holder.mNameTxt 		= (TextView) convertView.findViewById(R.id.tv_name);
-			holder.mAddressTxt 		= (TextView) convertView.findViewById(R.id.tv_address);
-			holder.mHereNowTxt 		= (TextView) convertView.findViewById(R.id.tv_here_now);
 			holder.mDistanceTxt 	= (TextView) convertView.findViewById(R.id.tv_distance);
+			holder.mCategories		= (TextView) convertView.findViewById(R.id.tv_categories);
 			
 			convertView.setTag(holder);
 		} else {
 			holder = (ViewHolder) convertView.getTag();
 		}
 
-		FsqVenue venue 	= mVenueList.get(position);
+		Venue venue 	= mVenueList.get(position);
 	
-		holder.mNameTxt.setText(venue.name);
-		holder.mAddressTxt.setText(venue.address);
-		holder.mHereNowTxt.setText("(" + String.valueOf(venue.herenow) + " people here)");
-		holder.mDistanceTxt.setText(formatDistance(venue.distance));
+		holder.mNameTxt.setText(venue.getName());
+		holder.mDistanceTxt.setText(formatDistance(venue.getLocation().getDistance()));
+		ArrayList<Category> cat = venue.getCategories();
+		if (cat.size() != 0)
+			holder.mCategories.setText(venue.getCategories().get(0).getName());
 		
         return convertView;
 	}
@@ -81,9 +83,8 @@ public class NearbyAdapter extends BaseAdapter {
 	}
 	static class ViewHolder {
 		TextView mNameTxt;
-		TextView mAddressTxt;
-		TextView mHereNowTxt;
 		TextView mDistanceTxt;
 		ImageView mRibbonImg;
+		TextView mCategories;
 	}
 }

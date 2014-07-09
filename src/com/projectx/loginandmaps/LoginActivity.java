@@ -3,6 +3,8 @@ package com.projectx.loginandmaps;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -20,19 +22,30 @@ import com.projectx.loginandmaps.FoursquareApp.FsqAuthListener;
 
 public class LoginActivity extends Activity {
 	
+	private static final String MyPREFS = "MyPrefs";
 	private FoursquareApp fsapp;
+	private SharedPreferences myprefs;
 	
 	public static final String CLIENT_ID = "PDELA4BIYIQIJQ0MNGOQUJ0PPV0NPO3KLHI02SRM24HH5PCY";
 	public static final String CLIENT_SECRET = "ZMZKW3DVG535N2J0HYO4ZJNT3LRATHONLYD0HQLBCNWCFHDA";
 	
 	private static final int REQUEST_CODE_FSQ_CONNECT = 200;
     private static final int REQUEST_CODE_FSQ_TOKEN_EXCHANGE = 201;
+	private static final String ACCESS_TOKEN = null;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         // setting default screen to login.xml
         setContentView(R.layout.login);
+        myprefs = getSharedPreferences(MyPREFS, Context.MODE_PRIVATE);
+        if (myprefs.contains("api_key")) {
+//        	Editor editor = myprefs.edit();
+//            editor.putString("access_token", myprefs.getString("access_token", ACCESS_TOKEN));
+//            editor.commit();
+            Intent i = new Intent(getApplicationContext(), MapsActivity.class);
+			startActivity(i);
+        }
         fsapp = new FoursquareApp(getApplicationContext(), CLIENT_ID, CLIENT_SECRET);
         
         Button login = (Button) findViewById(R.id.btnLogin);
@@ -112,6 +125,9 @@ public class LoginActivity extends Activity {
             // it to shared prefs.
             //ExampleTokenStore.get().setToken(accessToken);
             fsapp.setupAccessToken(accessToken);
+            Editor editor = myprefs.edit();
+            editor.putString("access_token", accessToken);
+            editor.commit();
             Intent i = new Intent(getApplicationContext(), MapsActivity.class);
 			startActivity(i);
             

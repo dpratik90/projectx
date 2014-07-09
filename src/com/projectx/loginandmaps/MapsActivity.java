@@ -1,5 +1,7 @@
 package com.projectx.loginandmaps;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -8,20 +10,37 @@ import java.util.Map;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SearchView;
+import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
+import br.com.condesales.criterias.VenuesCriteria;
+import br.com.condesales.listeners.FoursquareVenuesRequestListener;
+import br.com.condesales.models.Category;
+import br.com.condesales.models.Venue;
+import br.com.condesales.tasks.venues.FoursquareVenuesNearbyRequest;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
@@ -41,6 +60,8 @@ public class MapsActivity extends Activity implements
 		LocationListener,
 		GooglePlayServicesClient.ConnectionCallbacks,
 		GooglePlayServicesClient.OnConnectionFailedListener{
+	protected static final String TAG = MapsActivity.class.getSimpleName();
+
 	// A request to connect to Location Services
     private LocationRequest mLocationRequest;
 
@@ -51,11 +72,15 @@ public class MapsActivity extends Activity implements
     private Intent foursquare;
     private FoursquareApp fapp;
 	private ListView mListView;
+	private String access_token;
 	private NearbyAdapter mAdapter;
-	private ArrayList<FsqVenue> mNearbyList;
+	private ArrayList<Venue> mNearbyList;
 	private ProgressDialog mProgress;
 	private Map<Integer, Marker> mapList;
 	private Location currentLocation;
+	private Marker focusedMarker;
+	private FoursquareVenuesRequestListener flistener;
+	private FoursquareVenuesNearbyRequest fnearby;
 	// Handle to SharedPreferences for this app
     SharedPreferences mPrefs;
 
@@ -71,22 +96,47 @@ public class MapsActivity extends Activity implements
         mAdapter		= new NearbyAdapter(getApplicationContext());
         mListView		= (ListView) findViewById(R.id.lv_places);
         mProgress		= new ProgressDialog(this);
-        mProgress.setMessage("Loading data");
+        mPrefs			= getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        mEditor			= mPrefs.edit();
+        access_token	= mPrefs.getString("access_token", "access_token");
+//        mProgress.setMessage("Loading data");
         mapList = new HashMap<Integer, Marker>();
+        fnearby = new FoursquareVenuesNearbyRequest(this, flistener, criteria);
+        EditText search = (EditText) findViewById(R.id.edittext);
+        getWindow().setSoftInputMode(
+			      WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        search.setOnEditorActionListener(new OnEditorActionListener() {
+			
+			@Override
+			public boolean onEditorAction(final TextView v, int actionId, KeyEvent event) {
+//				Log.e(TAG, "Finally got here!!!");
+//				String query = v.getText().toString();
+//				fnearby = new FoursquareVenuesNearbyRequest(this, flistener, criteria);
+				InputMethodManager inputManager = (InputMethodManager) getApplicationContext()
+			            .getSystemService(Context.INPUT_METHOD_SERVICE);
+				inputManager.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+				handleSearch(v.getText().toString());
+			    
+				return true;
+			}
+		});
         
         mListView.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				Marker m = mapList.get(position); 
-				m.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-				m.showInfoWindow();
-				googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(m.getPosition(), 20));
+				if (focusedMarker != null) 
+					focusedMarker.setIcon(BitmapDescriptorFactory.defaultMarker());
+				focusedMarker = mapList.get(position); 
+				focusedMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+				focusedMarker.showInfoWindow();
+				googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(focusedMarker.getPosition(), 20));
 				Log.e("pratik", "Got my location:" + googleMap.getMyLocation().toString());
 			}
 		});
         setupLocationListener();
+        setupFoursquareListener();
 
         try {
             // Loading map
@@ -96,6 +146,42 @@ public class MapsActivity extends Activity implements
         }
  
     }
+    
+    private void handleSearch(String query) {
+    	Log.e(TAG, "Finally got here!!!");
+    	try {
+			query = URLEncoder.encode(query, "utf-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	criteria.setQuery(query);
+		fnearby = new FoursquareVenuesNearbyRequest(this, flistener, criteria);
+		fnearby.execute(access_token);
+    }
+    
+    private void setupFoursquareListener() {
+    	criteria = new VenuesCriteria();
+    	flistener = new FoursquareVenuesRequestListener() {
+			
+			@Override
+			public void onError(String errorMsg) {
+				Log.e(TAG, "Error fetching data from foursquare: " + errorMsg);
+//				toastMessage(getApplicationContext(), errorMsg);
+			}
+			
+			@Override
+			public void onVenuesFetched(ArrayList<Venue> venues) {
+				mNearbyList = venues;
+				mAdapter.setData(mNearbyList);
+		        mListView.setAdapter(mAdapter);
+//				mAdapter.notifyDataSetChanged();
+				googleMap.clear();
+				setMarkerOnMap();
+			}
+		};
+    }
+    
     
     private void setupLocationListener() {
     	// Create a new global location parameters object
@@ -192,6 +278,47 @@ public class MapsActivity extends Activity implements
         }
     }
     
+//    TabHost.OnTabChangeListener tabChangeListener = new TabHost.OnTabChangeListener() {
+//		
+//		@Override
+//		public void onTabChanged(String tabId) {
+//			android.support.v4.app.FragmentManager fm =   getSupportFragmentManager();
+//			AndroidFragment androidFragment = (AndroidFragment) fm.findFragmentByTag("android");
+//			AppleFragment appleFragment = (AppleFragment) fm.findFragmentByTag("apple");
+//			android.support.v4.app.FragmentTransaction ft = fm.beginTransaction();
+//			
+//			/** Detaches the androidfragment if exists */
+//			if(androidFragment!=null)
+//				ft.detach(androidFragment);
+//			
+//			/** Detaches the applefragment if exists */
+//			if(appleFragment!=null)
+//				ft.detach(appleFragment);
+//			
+//			/** If current tab is android */
+//			if(tabId.equalsIgnoreCase("android")){
+//				
+//				if(androidFragment==null){		
+//					/** Create AndroidFragment and adding to fragmenttransaction */
+//					ft.add(R.id.realtabcontent,new AndroidFragment(), "android");						
+//				}else{
+//					/** Bring to the front, if already exists in the fragmenttransaction */
+//					ft.attach(androidFragment);						
+//				}
+//				
+//			}else{	/** If current tab is apple */
+//				if(appleFragment==null){
+//					/** Create AppleFragment and adding to fragmenttransaction */
+//					ft.add(R.id.realtabcontent,new AppleFragment(), "apple");						
+//				}else{
+//					/** Bring to the front, if already exists in the fragmenttransaction */
+//					ft.attach(appleFragment);						
+//				}
+//			}
+//			ft.commit();				
+//		}
+//	};
+    
 ////    private void setCurrentLocation() {
 ////		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 //        
@@ -219,23 +346,24 @@ public class MapsActivity extends Activity implements
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
     }
     
-    private void loadNearbyPlaces() {
-    	mProgress.show();
-    	
-    	new Thread() {
-    		@Override
-    		public void run() {
-    			int status=0;
-    			try {
-    				mNearbyList = fapp.getNearby(currentLocation.getLatitude(), currentLocation.getLongitude());
-    			} catch (Exception e) {
-    				status=1;
-    				e.printStackTrace();
-    			}
-    			mHandler.dispatchMessage(mHandler.obtainMessage(status));
-    		}
-    	}.start();
-    }
+//    private void loadNearbyPlaces() {
+//    	mProgress.show();
+//    	
+//    	new Thread() {
+//    		@Override
+//    		public void run() {
+//    			int status=0;
+//    			try {
+////    				mNearbyList = fapp.getNearby(currentLocation.getLatitude(), currentLocation.getLongitude());
+////    				mNearbyList = fnearby.
+//    			} catch (Exception e) {
+//    				status=1;
+//    				e.printStackTrace();
+//    			}
+//    			mHandler.dispatchMessage(mHandler.obtainMessage(status));
+//    		}
+//    	}.start();
+//    }
     
     private Handler mHandler = new Handler() {
     	@Override
@@ -265,18 +393,26 @@ public class MapsActivity extends Activity implements
     		}
     	}
     };
+
+	private VenuesCriteria criteria;
     
     private void setMarkerOnMap() {
+    	mapList.clear();
     	googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
     			new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 15));
-		Iterator<FsqVenue> iter = mNearbyList.iterator();
+		Iterator<Venue> iter = mNearbyList.iterator();
 		for (int i=0; i<mAdapter.getCount(); i++) {
-			FsqVenue venue = mNearbyList.get(i);
-			Location loc = venue.location;
+			Venue venue = mNearbyList.get(i);
+			Log.e(TAG, "Its venue number : " + i + "  name: " + venue.getName());
+			ArrayList<Category> categories = venue.getCategories();
+			for (Category category : categories) {
+				Log.e(TAG, "Venue categories: " + category.getName());
+			}
 			
-			double lat = loc.getLatitude();
-			double lng = loc.getLongitude();
-			Marker marker = googleMap.addMarker((new MarkerOptions()).position(new LatLng(lat, lng)).title(venue.name));
+			br.com.condesales.models.Location loc = venue.getLocation();
+			double lat = loc.getLat();
+			double lng = loc.getLng();
+			Marker marker = googleMap.addMarker((new MarkerOptions()).position(new LatLng(lat, lng)).title(venue.getName()));
 			mapList.put(i, marker);
 		}
 		
@@ -291,7 +427,17 @@ public class MapsActivity extends Activity implements
     public void onConnected(Bundle bundle) {
         toastMessage(this, "Connected to google services");
         currentLocation = mLocationClient.getLastLocation();
-        loadNearbyPlaces();
+//        Location loc = new Location("pratik");
+        currentLocation.setLatitude(40.713968);
+        currentLocation.setLongitude(-74.014855);
+        criteria.setLocation(currentLocation);
+        criteria.setRadius(10000);
+        criteria.setQuantity(100);
+        criteria.setQuery("food");
+        fnearby = new FoursquareVenuesNearbyRequest(this, flistener, criteria);
+		fnearby.execute(access_token);
+        
+//        loadNearbyPlaces();
     }
 
     /*
@@ -351,7 +497,7 @@ public class MapsActivity extends Activity implements
 
         // Report to the UI that the location was updated
 //        mConnectionStatus.setText(R.string.location_updated);
-    	currentLocation = location;
+//    	currentLocation = location;
 
 //        // In the UI, set the latitude and longitude to the value received
 //        mLatLng.setText(LocationUtils.getLatLng(this, location));

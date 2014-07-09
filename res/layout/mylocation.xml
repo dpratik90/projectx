@@ -4,6 +4,14 @@
     android:layout_height="fill_parent"
     android:baselineAligned="false"
     android:orientation="vertical"  >
+
+    <EditText
+        android:id="@+id/edittext"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"   
+        android:inputType="text" >
+    </EditText>
+    
 	<LinearLayout
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
@@ -13,9 +21,9 @@
         <!-- Map -->
         <fragment
             android:id="@+id/map"
-            android:name="com.google.android.gms.maps.MapFragment"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            class="com.google.android.gms.maps.MapFragment"
          />
             <!--  android:layout_weight="1" -->
      </LinearLayout>
