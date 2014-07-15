@@ -31,7 +31,7 @@ public class AddCard extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				startActivity(new Intent(getApplicationContext(), BasicActivity.class));
+				startActivity(new Intent(getApplicationContext(), MapsActivity.class));
 			}
 		});
 		mListView = (ListView) findViewById(R.id.my_cards);

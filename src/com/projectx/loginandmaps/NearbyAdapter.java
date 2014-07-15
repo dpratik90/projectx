@@ -15,23 +15,23 @@ import br.com.condesales.models.Category;
 import br.com.condesales.models.Venue;
 
 public class NearbyAdapter extends BaseAdapter {
-	private ArrayList<Venue> mVenueList;
+	private ArrayList<Place> mPlaceList;
 	private LayoutInflater mInflater;
 
 	public NearbyAdapter(Context c) {
         mInflater 			= LayoutInflater.from(c);
     }
 
-	public void setData(ArrayList<Venue> poolList) {
-		mVenueList = poolList;
+	public void setData(ArrayList<Place> poolList) {
+		mPlaceList = poolList;
 	}
 	
 	public int getCount() {
-		return mVenueList.size();
+		return mPlaceList.size();
 	}
 
 	public Object getItem(int position) {
-		return mVenueList.get(position);
+		return mPlaceList.get(position);
 	}
 
 	public long getItemId(int position) {
@@ -55,13 +55,12 @@ public class NearbyAdapter extends BaseAdapter {
 			holder = (ViewHolder) convertView.getTag();
 		}
 
-		Venue venue 	= mVenueList.get(position);
-		Log.e("MapsActivity", "name of venue: " + venue.getName());
-		holder.mNameTxt.setText(venue.getName());
-		holder.mDistanceTxt.setText(formatDistance(venue.getLocation().getDistance()));
-		ArrayList<Category> cat = venue.getCategories();
-		if (cat.size() != 0)
-			holder.mCategories.setText(venue.getCategories().get(0).getName());
+		Place place				 	= mPlaceList.get(position);
+		Log.e("MapsActivity", "name of venue: " + place.name);
+		holder.mNameTxt.setText(place.name);
+		holder.mDistanceTxt.setText(formatDistance(MapsActivity.gps2m(place.geometry.location.lat, place.geometry.location.lng, place.geometry.location.lat, place.geometry.location.lng)));
+		
+		holder.mCategories.setText(place.formatted_address);
 		
         return convertView;
 	}
@@ -69,18 +68,9 @@ public class NearbyAdapter extends BaseAdapter {
 	private String formatDistance(double distance) {
 		String result = "";
 		
-		DecimalFormat dF = new DecimalFormat("00");
+		double d = distance*0.000621371;
 		
-		dF.applyPattern("0.#");
-		
-		if (distance < 1000)
-			result = dF.format(distance) + " m";
-		else {
-			distance = distance / 1000.0;
-			result   = dF.format(distance) + " km";
-		}
-		
-		return result;
+		return ((Double) d).toString();
 	}
 	static class ViewHolder {
 		TextView mNameTxt;

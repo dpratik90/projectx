@@ -6,22 +6,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.text.Html;
+import android.util.FloatMath;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -29,24 +30,21 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
-import android.widget.SlidingDrawer;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 import br.com.condesales.criterias.VenuesCriteria;
+import br.com.condesales.listeners.ErrorListener;
 import br.com.condesales.listeners.FoursquareVenuesRequestListener;
 import br.com.condesales.models.Category;
 import br.com.condesales.models.Venue;
 import br.com.condesales.tasks.venues.FoursquareVenuesNearbyRequest;
 
-import com.androidhive.googleplacesandmaps.GooglePlaces;
-import com.androidhive.googleplacesandmaps.MainActivity;
-import com.androidhive.googleplacesandmaps.Place;
-import com.androidhive.googleplacesandmaps.R;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -65,7 +63,16 @@ public class MapsActivity extends Activity implements
 		LocationListener,
 		GooglePlayServicesClient.ConnectionCallbacks,
 		GooglePlayServicesClient.OnConnectionFailedListener{
+	
+
 	protected static final String TAG = MapsActivity.class.getSimpleName();
+	public String[] categories = {
+			"food",
+			"restaurant",
+			"gas_station",
+			"grocery_or_supermarket",
+			"bar"
+	};
 
 	// A request to connect to Location Services
     private LocationRequest mLocationRequest;
@@ -83,6 +90,7 @@ public class MapsActivity extends Activity implements
 	private ProgressDialog mProgress;
 	private Map<Integer, Marker> mapList;
 	private static Location currentLocation;
+	private String lastSearchQuery;
 	private Marker focusedMarker;
 	private static FoursquareVenuesRequestListener flistener;
 	private static FoursquareVenuesNearbyRequest fnearby;
@@ -93,27 +101,127 @@ public class MapsActivity extends Activity implements
     // Handle to a SharedPreferences editor
     SharedPreferences.Editor mEditor;
     EditText search;
+    
+    
+    
+    
+    
+    
+    
+    //Google data variables
+ // flag for Internet connection status
+ 	Boolean isInternetPresent = false;
+ 	private ArrayList<Place> myNearbyList;
+ 	private Location lastKnownLoc;
+
+ 	// Connection detector class
+ 	ConnectionDetector cd;
+ 	
+ 	// Alert Dialog Manager
+ 	AlertDialogManager alert = new AlertDialogManager();
+
+ 	// Google Places
+ 	GooglePlaces googlePlaces;
+
+ 	// Places List
+ 	PlacesList nearPlaces;
+
+ 	// GPS Location
+ 	GPSTracker gps;
+
+ 	// Button
+ 	Button btnShowOnMap;
+
+ 	// Progress dialog
+ 	ProgressDialog pDialog;
+ 	
+ 	// Places Listview
+ 	ListView lv;
+ 	
+ 	MapsVenueRequestListener plistener;
+ 	
+ 	// ListItems data
+ 	ArrayList<HashMap<String, String>> placesListItems = new ArrayList<HashMap<String,String>>();
+ 	
+ 	
+ 	// KEY Strings
+ 	public static String KEY_REFERENCE = "reference"; // id of the place
+ 	public static String KEY_NAME = "name"; // name of the place
+ 	public static String KEY_VICINITY = "vicinity"; // Place area name
 
  
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mylocation);
-        fapp 			= new FoursquareApp(getApplicationContext(), LoginActivity.CLIENT_ID, LoginActivity.CLIENT_SECRET);
+        myNearbyList		= new ArrayList<Place>();
+        mPrefs			= getSharedPreferences(LoginActivity.MyPREFS, MODE_PRIVATE);
+        mEditor			= mPrefs.edit();
+        plistener = new MapsVenueRequestListener();
+        currentLocation = new Location("pratik");
+        //Google search data
+        cd = new ConnectionDetector(getApplicationContext());
+
+		// Check if Internet present
+		isInternetPresent = cd.isConnectingToInternet();
+		if (!isInternetPresent) {
+			// Internet Connection is not present
+			alert.showAlertDialog(MapsActivity.this, "Internet Connection Error",
+					"Please connect to working Internet connection", false);
+			// stop executing code by return
+			return;
+		}
+
+		// creating GPS Class object
+		gps = new GPSTracker(this);
+		lastKnownLoc = gps.locationManager.getLastKnownLocation("pratik");
+
+		// check if GPS location can get
+		if (gps.canGetLocation()) {
+			Log.d("Your Location", "latitude:" + gps.getLatitude() + ", longitude: " + gps.getLongitude());
+			mEditor.putString("lat", ((Double) gps.getLatitude()).toString());
+			mEditor.putString("lng", ((Double) gps.getLongitude()).toString());
+			mEditor.commit();
+			currentLocation.set(gps.location);
+		} else {
+			// Can't get user's current location
+			alert.showAlertDialog(MapsActivity.this, "GPS Status",
+					"Couldn't get location information. Please enable GPS",
+					false);
+			// stop executing code by return
+			currentLocation.set(lastKnownLoc);
+		}
+		
+		// calling background Async task to load Google Places
+				// After getting places from Google all the data is shown in listview
+//		LoadPlaces lp = new LoadPlaces(plistener);
+//		lp.execute("all");
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        //Foursquare app setup.
+        
+//        fapp 			= new FoursquareApp(getApplicationContext(), LoginActivity.CLIENT_ID, LoginActivity.CLIENT_SECRET);
         mAdapter		= new NearbyAdapter(getApplicationContext());
         mListView		= (ListView) findViewById(R.id.lv_places);
         mNearbyList		= new ArrayList<Venue>();
-        mAdapter.setData(mNearbyList);
+        mAdapter.setData(myNearbyList);
         mListView.setAdapter(mAdapter);
 
         mProgress		= new ProgressDialog(this);
-        currentLocation = new Location("pratik");
-        mPrefs			= getSharedPreferences(LoginActivity.MyPREFS, MODE_PRIVATE);
-        mEditor			= mPrefs.edit();
+        
+        
         access_token	= mPrefs.getString("access_token", "access_token");
         Log.e(TAG, "Acess toekn: " + access_token);
         mapList = new HashMap<Integer, Marker>();
-        fnearby = new FoursquareVenuesNearbyRequest(this, flistener, criteria);
+//        fnearby = new FoursquareVenuesNearbyRequest(this, flistener, criteria);
         search = (EditText) findViewById(R.id.edittext);
         
         search.setOnEditorActionListener(new OnEditorActionListener() {
@@ -143,7 +251,7 @@ public class MapsActivity extends Activity implements
 				Log.e("pratik", "Got my location:" + googleMap.getMyLocation().toString());
 			}
 		});
-        setupLocationListener();
+//        setupLocationListener();
         setupFoursquareListener();
 
         try {
@@ -165,7 +273,8 @@ public class MapsActivity extends Activity implements
     
     
     
-    private void handleSearch(String query) {
+    public void handleSearch(String query) {
+    	lastSearchQuery = query;
     	Log.e(TAG, "Finally got here!!!");
     	try {
 			query = URLEncoder.encode(query, "utf-8");
@@ -173,14 +282,54 @@ public class MapsActivity extends Activity implements
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    	criteria.setRadius(10000);
-        criteria.setQuantity(100);
-    	criteria.setQuery(query);
-    	mProgress.setMessage("Loading data ..");
-    	mProgress.show();
-		fnearby = new FoursquareVenuesNearbyRequest(this, flistener, criteria);
-		fnearby.execute(access_token);
+    	(new LoadPlaces(plistener)).execute(query);
     }
+    
+    class MapsVenueRequestListener implements ErrorListener {
+
+		@Override
+		public void onError(String errorMsg) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+		public void onPlacesFetched(PlacesList places) {
+			List<Place> ps = places.results;
+			Collections.sort(ps, new Comparator<Place>() {
+
+				@Override
+				public int compare(Place lhs, Place rhs) {
+					// TODO Auto-generated method stub
+					return (int) (gps2m(lhs.geometry.location.lat, lhs.geometry.location.lng, rhs.geometry.location.lat, rhs.geometry.location.lng));
+				}
+			});
+			
+			myNearbyList.clear();
+			for (Place v : ps)
+				myNearbyList.add(v);
+			mAdapter.notifyDataSetChanged();
+			googleMap.clear();
+			setMarkerOnMap();
+			mProgress.dismiss();
+		}
+    	
+    }
+    
+    public static double gps2m(double lat_a, double lng_a, double lat_b, double lng_b) {
+	    float pk = (float) (180/3.14169);
+
+	    float a1 = (float) (lat_a / pk);
+	    float a2 = (float) (lng_a / pk);
+	    float b1 = (float) (lat_b / pk);
+	    float b2 = (float) (lng_b / pk);
+
+	    float t1 = FloatMath.cos(a1)*FloatMath.cos(a2)*FloatMath.cos(b1)*FloatMath.cos(b2);
+	    float t2 = FloatMath.cos(a1)*FloatMath.sin(a2)*FloatMath.cos(b1)*FloatMath.sin(b2);
+	    float t3 = FloatMath.sin(a1)*FloatMath.sin(b1);
+	    double tt = Math.acos(t1 + t2 + t3);
+
+	    return 6366000*tt;
+	}
     
     private void setupFoursquareListener() {
     	criteria = new VenuesCriteria();
@@ -254,14 +403,19 @@ public class MapsActivity extends Activity implements
         Log.e(TAG, "Lat Lng: " + mPrefs.getString("lat", "") + ", " + mPrefs.getString("lng", ""));
         if (access_token != null && access_token != "access_token") {
         	Log.e(TAG, "It does contain access token");
-	        setCurrentLocation();
-	        handleSearch("food");
+        	if (currentLocation != lastKnownLoc) {
+        		currentLocation = lastKnownLoc;
+        		setCurrentLocation();
+    	        handleSearch("all");
+        	}
+	        
         }
     }
  
     @Override
     protected void onResume() {
         super.onResume();
+        lastKnownLoc = gps.locationManager.getLastKnownLocation("pratik");
         mPrefs			= getSharedPreferences(LoginActivity.MyPREFS, MODE_PRIVATE);
         initilizeMap();
         getWindow().setSoftInputMode(
@@ -275,17 +429,17 @@ public class MapsActivity extends Activity implements
         }
     }
     
-    @Override
-    protected void onStart() {
-    	super.onStart();
-    	mLocationClient.connect();
-    }
-    
-    @Override
-    protected void onStop() {
-    	mLocationClient.disconnect();
-    	super.onStop();
-    }
+//    @Override
+//    protected void onStart() {
+//    	super.onStart();
+//    	mLocationClient.connect();
+//    }
+//    
+//    @Override
+//    protected void onStop() {
+//    	mLocationClient.disconnect();
+//    	super.onStop();
+//    }
     
     /**
      * Verify that Google Play services is available before making a request.
@@ -464,138 +618,199 @@ public class MapsActivity extends Activity implements
     /**
      * Background Async Task to Load Google places
      * */
-//    class LoadPlaces extends AsyncTask<String, String, String> {
-//
-//    	/**
-//    	 * Before starting background thread Show Progress Dialog
-//    	 * */
-//    	@Override
-//    	protected void onPreExecute() {
-//    		super.onPreExecute();
-//    		pDialog = new ProgressDialog(MapsActivity.this);
-//    		pDialog.setMessage(Html.fromHtml("<b>Search</b><br/>Loading Places..."));
-//    		pDialog.setIndeterminate(false);
-//    		pDialog.setCancelable(false);
-//    		pDialog.show();
-//    	}
-//
-//    	/**
-//    	 * getting Places JSON
-//    	 * */
-//    	protected String doInBackground(String... args) {
-//    		// creating Places class object
-//    		googlePlaces = new GooglePlaces();
-//    		
-//    		try {
-//    			// Separeate your place types by PIPE symbol "|"
-//    			// If you want all types places make it as null
-//    			// Check list of types supported by google
-//    			// 
+    class LoadPlaces extends AsyncTask<String, String, String> {
+    	MapsVenueRequestListener listener;
+    	public LoadPlaces(MapsVenueRequestListener mapsVenueRequestListener) {
+			listener = mapsVenueRequestListener;
+		}
+
+		/**
+    	 * Before starting background thread Show Progress Dialog
+    	 * */
+    	@Override
+    	protected void onPreExecute() {
+    		super.onPreExecute();
+    		pDialog = new ProgressDialog(MapsActivity.this);
+    		pDialog.setMessage(Html.fromHtml("<b>Search</b><br/>Loading Places..."));
+    		pDialog.setIndeterminate(false);
+    		pDialog.setCancelable(false);
+    		pDialog.show();
+    	}
+
+    	/**
+    	 * getting Places JSON
+    	 * */
+    	protected String doInBackground(String... args) {
+    		String query = args[0];
+    		String types = "";
+    		for (int i=0 ; i<categories.length; i++) {
+    			if (i == categories.length - 1) 
+    				types = types.concat(categories[i]);
+    			else
+    				types = types.concat(categories[i] + "|");
+    		}
+    		
+    		// creating Places class object
+    		googlePlaces = new GooglePlaces();
+    		
+    		try {
+    			if (query.contains("restaurant"))
+    				types = categories[1];
+    			else if (query.contains("food"))
+    				types = categories[0];
+    			else if (query.contains("gas station"))
+    				types = categories[2];
+    			else if (query.contains("grocery") || query.contains("supermarket"))
+    				types = categories[3];
+    			else if (query.contains("bar"))
+    				types = categories[4];
+    			// Separeate your place types by PIPE symbol "|"
+    			// If you want all types places make it as null
+    			// Check list of types supported by google
+    			// 
 //    			String types = "cafe|restaurant"; // Listing places only cafes, restaurants
-//    			
-//    			// Radius in meters - increase this value if you don't find any places
-//    			double radius = 1000; // 1000 meters 
-//    			
-//    			// get nearest places
-//    			nearPlaces = googlePlaces.search(gps.getLatitude(),
-//    					gps.getLongitude(), radius, types);
-//    			
-//
-//    		} catch (Exception e) {
-//    			e.printStackTrace();
-//    		}
-//    		return null;
-//    	}
-//
-//    	/**
-//    	 * After completing background task Dismiss the progress dialog
-//    	 * and show the data in UI
-//    	 * Always use runOnUiThread(new Runnable()) to update UI from background
-//    	 * thread, otherwise you will get error
-//    	 * **/
-//    	protected void onPostExecute(String file_url) {
-//    		// dismiss the dialog after getting all products
-//    		mProgress.dismiss();
-//    		// updating UI from Background Thread
-//    		runOnUiThread(new Runnable() {
-//    			public void run() {
-//    				/**
-//    				 * Updating parsed Places into LISTVIEW
-//    				 * */
-//    				// Get json response status
-//    				String status = nearPlaces.status;
-//    				
-//    				// Check for all possible status
-//    				if(status.equals("OK")){
-//    					// Successfully got places details
-//    					if (nearPlaces.results != null) {
-//    						// loop through each place
-//    						for (Place p : nearPlaces.results) {
-//    							HashMap<String, String> map = new HashMap<String, String>();
-//    							
-//    							// Place reference won't display in listview - it will be hidden
-//    							// Place reference is used to get "place full details"
-//    							map.put(KEY_REFERENCE, p.reference);
-//    							
-//    							// Place name
-//    							map.put(KEY_NAME, p.name);
-//    							
-//    							
-//    							// adding HashMap to ArrayList
-//    							placesListItems.add(map);
-//    						}
-//    						// list adapter
-//    						ListAdapter adapter = new SimpleAdapter(MainActivity.this, placesListItems,
+    			
+    			// Radius in meters - increase this value if you don't find any places
+    			double radius = 3000; // 1000 meters 
+    			
+    			// get nearest places
+    			nearPlaces = googlePlaces.search(currentLocation.getLatitude(), currentLocation.getLongitude(), radius, types);
+    			
+    			
+
+    		} catch (Exception e) {
+    			e.printStackTrace();
+    			listener.onError(e.toString());
+    		}
+    		listener.onPlacesFetched(nearPlaces);
+    		
+    		return null;
+    	}
+
+    	/**
+    	 * After completing background task Dismiss the progress dialog
+    	 * and show the data in UI
+    	 * Always use runOnUiThread(new Runnable()) to update UI from background
+    	 * thread, otherwise you will get error
+    	 * **/
+    	protected void onPostExecute(String file_url) {
+    		// dismiss the dialog after getting all products
+    		mProgress.dismiss();
+    		// updating UI from Background Thread
+    		runOnUiThread(new Runnable() {
+    			public void run() {
+    				/**
+    				 * Updating parsed Places into LISTVIEW
+    				 * */
+    				// Get json response status
+    				String status = nearPlaces.status;
+    				
+    				// Check for all possible status
+    				if(status.equals("OK")){
+    					// Successfully got places details
+    					if (nearPlaces.results != null) {
+    						// loop through each place
+    						for (Place p : nearPlaces.results) {
+    							HashMap<String, String> map = new HashMap<String, String>();
+    							
+    							// Place reference won't display in listview - it will be hidden
+    							// Place reference is used to get "place full details"
+    							map.put(KEY_REFERENCE, p.reference);
+    							
+    							// Place name
+    							map.put(KEY_NAME, p.name);
+    							
+    							
+    							// adding HashMap to ArrayList
+    							placesListItems.add(map);
+    						}
+    						// list adapter
+//    						ListAdapter adapter = new SimpleAdapter(MapsActivity.this, placesListItems,
 //    				                R.layout.list_item,
 //    				                new String[] { KEY_REFERENCE, KEY_NAME}, new int[] {
 //    				                        R.id.reference, R.id.name });
 //    						
 //    						// Adding data into listview
 //    						lv.setAdapter(adapter);
-//    					}
-//    				}
-//    				else if(status.equals("ZERO_RESULTS")){
-//    					// Zero results found
-//    					alert.showAlertDialog(MainActivity.this, "Near Places",
-//    							"Sorry no places found. Try to change the types of places",
-//    							false);
-//    				}
-//    				else if(status.equals("UNKNOWN_ERROR"))
-//    				{
-//    					alert.showAlertDialog(MainActivity.this, "Places Error",
-//    							"Sorry unknown error occured.",
-//    							false);
-//    				}
-//    				else if(status.equals("OVER_QUERY_LIMIT"))
-//    				{
-//    					alert.showAlertDialog(MainActivity.this, "Places Error",
-//    							"Sorry query limit to google places is reached",
-//    							false);
-//    				}
-//    				else if(status.equals("REQUEST_DENIED"))
-//    				{
-//    					alert.showAlertDialog(MainActivity.this, "Places Error",
-//    							"Sorry error occured. Request is denied",
-//    							false);
-//    				}
-//    				else if(status.equals("INVALID_REQUEST"))
-//    				{
-//    					alert.showAlertDialog(MainActivity.this, "Places Error",
-//    							"Sorry error occured. Invalid Request",
-//    							false);
-//    				}
-//    				else
-//    				{
-//    					alert.showAlertDialog(MainActivity.this, "Places Error",
-//    							"Sorry error occured.",
-//    							false);
-//    				}
-//    			}
-//    		});
-//
-//    	}
-//
-//    }
+    					}
+    				}
+    				else if(status.equals("ZERO_RESULTS")){
+    					// Zero results found
+    					alert.showAlertDialog(MapsActivity.this, "Near Places",
+    							"Sorry no places found. Try to change the types of places",
+    							false);
+    				}
+    				else if(status.equals("UNKNOWN_ERROR"))
+    				{
+    					alert.showAlertDialog(MapsActivity.this, "Places Error",
+    							"Sorry unknown error occured.",
+    							false);
+    				}
+    				else if(status.equals("OVER_QUERY_LIMIT"))
+    				{
+    					alert.showAlertDialog(MapsActivity.this, "Places Error",
+    							"Sorry query limit to google places is reached",
+    							false);
+    				}
+    				else if(status.equals("REQUEST_DENIED"))
+    				{
+    					alert.showAlertDialog(MapsActivity.this, "Places Error",
+    							"Sorry error occured. Request is denied",
+    							false);
+    				}
+    				else if(status.equals("INVALID_REQUEST"))
+    				{
+    					alert.showAlertDialog(MapsActivity.this, "Places Error",
+    							"Sorry error occured. Invalid Request",
+    							false);
+    				}
+    				else
+    				{
+    					alert.showAlertDialog(MapsActivity.this, "Places Error",
+    							"Sorry error occured.",
+    							false);
+    				}
+    			}
+    		});
+
+    	}
+
+    }
+    
+    public class AlertDialogManager {
+    	/**
+    	 * Function to display simple Alert Dialog
+    	 * @param context - application context
+    	 * @param title - alert dialog title
+    	 * @param message - alert message
+    	 * @param status - success/failure (used to set icon)
+    	 * 				 - pass null if you don't want icon
+    	 * */
+    	@SuppressWarnings("deprecation")
+		public void showAlertDialog(Context context, String title, String message,
+    			Boolean status) {
+    		AlertDialog alertDialog = new AlertDialog.Builder(context).create();
+
+    		// Setting Dialog Title
+    		alertDialog.setTitle(title);
+
+    		// Setting Dialog Message
+    		alertDialog.setMessage(message);
+
+    		if(status != null)
+    			// Setting alert dialog icon
+    			alertDialog.setIcon((status) ? R.drawable.success : R.drawable.fail);
+
+    		// Setting OK Button
+    		alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+    			public void onClick(DialogInterface dialog, int which) {
+    			}
+    		});
+
+    		// Showing Alert Message
+    		alertDialog.show();
+    	}
+    }
  
 }
 
