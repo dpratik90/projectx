@@ -6,4 +6,10 @@
     <string name="search_title">Search..</string>
     <string name="play_services_available">Google Play services is available</string>
     <string name="enter_text">Search..</string>
+    <string name="card_prompt">Choose a card</string>
+    <string-array name="banks">
+        <item>American Express</item>
+        <item>CitiBank</item>
+        <item>Chase</item>
+    </string-array>
 </resources>

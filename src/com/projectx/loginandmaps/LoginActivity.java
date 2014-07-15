@@ -22,7 +22,7 @@ import com.projectx.loginandmaps.FoursquareApp.FsqAuthListener;
 
 public class LoginActivity extends Activity {
 	
-	private static final String MyPREFS = "MyPrefs";
+	public static final String MyPREFS = "MyPrefs";
 	private FoursquareApp fsapp;
 	private SharedPreferences myprefs;
 	
@@ -71,6 +71,15 @@ public class LoginActivity extends Activity {
         };
         
         fsapp.setListener(listener);
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		myprefs = getSharedPreferences(MyPREFS, Context.MODE_PRIVATE);
+		if (myprefs.contains("access_token")) {
+			startActivity(new Intent(getApplicationContext(), AddCard.class));
+		}
 	}
 	
 	private void onCompleteConnect(int resultCode, Intent data) {
@@ -128,7 +137,7 @@ public class LoginActivity extends Activity {
             Editor editor = myprefs.edit();
             editor.putString("access_token", accessToken);
             editor.commit();
-            Intent i = new Intent(getApplicationContext(), MapsActivity.class);
+            Intent i = new Intent(getApplicationContext(), AddCard.class);
 			startActivity(i);
             
         } else {

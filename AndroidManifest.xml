@@ -39,6 +39,11 @@
         <activity android:name=".RegisterActivity"
                   android:label="Register New Account"
                   ></activity>
+        <activity android:name=".BasicActivity"
+            	  android:windowSoftInputMode="stateHidden|adjustResize"
+            	  android:label="Basic Tabhost view"></activity>
+        <activity android:name=".ChangeLocation"
+            	  android:label="Change current location view"></activity>
         <activity android:name=".MapsActivity"
             	  android:theme="@style/Theme.AppCompat.Light"
                   android:label="Nearby from foursquare">
@@ -50,6 +55,8 @@
         
         <activity android:name="com.foursquare.android.nativeoauth.TokenExchangeActivity"
 		      	  android:theme="@android:style/Theme.Dialog"></activity>
+        <activity android:name="AddCard"
+            	  android:label="Add a card"></activity>
         <!-- Goolge Maps API Key -->
 		<meta-data
 		     android:name="com.google.android.maps.v2.API_KEY"

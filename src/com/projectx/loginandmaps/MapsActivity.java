@@ -3,6 +3,8 @@ package com.projectx.loginandmaps;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -10,7 +12,6 @@ import java.util.Map;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -20,19 +21,19 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.app.FragmentActivity;
+import android.text.Html;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
+import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.SearchView;
+import android.widget.SimpleAdapter;
+import android.widget.SlidingDrawer;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
@@ -42,6 +43,10 @@ import br.com.condesales.models.Category;
 import br.com.condesales.models.Venue;
 import br.com.condesales.tasks.venues.FoursquareVenuesNearbyRequest;
 
+import com.androidhive.googleplacesandmaps.GooglePlaces;
+import com.androidhive.googleplacesandmaps.MainActivity;
+import com.androidhive.googleplacesandmaps.Place;
+import com.androidhive.googleplacesandmaps.R;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -77,15 +82,17 @@ public class MapsActivity extends Activity implements
 	private ArrayList<Venue> mNearbyList;
 	private ProgressDialog mProgress;
 	private Map<Integer, Marker> mapList;
-	private Location currentLocation;
+	private static Location currentLocation;
 	private Marker focusedMarker;
-	private FoursquareVenuesRequestListener flistener;
-	private FoursquareVenuesNearbyRequest fnearby;
+	private static FoursquareVenuesRequestListener flistener;
+	private static FoursquareVenuesNearbyRequest fnearby;
+	private static VenuesCriteria criteria;
 	// Handle to SharedPreferences for this app
-    SharedPreferences mPrefs;
+	SharedPreferences mPrefs;
 
     // Handle to a SharedPreferences editor
     SharedPreferences.Editor mEditor;
+    EditText search;
 
  
     @Override
@@ -95,23 +102,24 @@ public class MapsActivity extends Activity implements
         fapp 			= new FoursquareApp(getApplicationContext(), LoginActivity.CLIENT_ID, LoginActivity.CLIENT_SECRET);
         mAdapter		= new NearbyAdapter(getApplicationContext());
         mListView		= (ListView) findViewById(R.id.lv_places);
+        mNearbyList		= new ArrayList<Venue>();
+        mAdapter.setData(mNearbyList);
+        mListView.setAdapter(mAdapter);
+
         mProgress		= new ProgressDialog(this);
-        mPrefs			= getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        currentLocation = new Location("pratik");
+        mPrefs			= getSharedPreferences(LoginActivity.MyPREFS, MODE_PRIVATE);
         mEditor			= mPrefs.edit();
         access_token	= mPrefs.getString("access_token", "access_token");
-//        mProgress.setMessage("Loading data");
+        Log.e(TAG, "Acess toekn: " + access_token);
         mapList = new HashMap<Integer, Marker>();
         fnearby = new FoursquareVenuesNearbyRequest(this, flistener, criteria);
-        EditText search = (EditText) findViewById(R.id.edittext);
-        getWindow().setSoftInputMode(
-			      WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        search = (EditText) findViewById(R.id.edittext);
+        
         search.setOnEditorActionListener(new OnEditorActionListener() {
 			
 			@Override
 			public boolean onEditorAction(final TextView v, int actionId, KeyEvent event) {
-//				Log.e(TAG, "Finally got here!!!");
-//				String query = v.getText().toString();
-//				fnearby = new FoursquareVenuesNearbyRequest(this, flistener, criteria);
 				InputMethodManager inputManager = (InputMethodManager) getApplicationContext()
 			            .getSystemService(Context.INPUT_METHOD_SERVICE);
 				inputManager.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
@@ -127,7 +135,7 @@ public class MapsActivity extends Activity implements
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				if (focusedMarker != null) 
-					focusedMarker.setIcon(BitmapDescriptorFactory.defaultMarker());
+					focusedMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
 				focusedMarker = mapList.get(position); 
 				focusedMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
 				focusedMarker.showInfoWindow();
@@ -147,6 +155,16 @@ public class MapsActivity extends Activity implements
  
     }
     
+    public void setCurrentLocation() {
+    	double lat = Double.valueOf(mPrefs.getString("lat", "40.7139"));
+    	double lng = Double.valueOf(mPrefs.getString("lng", "-74.01"));
+    	currentLocation.setLatitude(lat);
+    	currentLocation.setLongitude(lng);
+    	criteria.setLocation(currentLocation);	
+    }
+    
+    
+    
     private void handleSearch(String query) {
     	Log.e(TAG, "Finally got here!!!");
     	try {
@@ -155,7 +173,11 @@ public class MapsActivity extends Activity implements
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+    	criteria.setRadius(10000);
+        criteria.setQuantity(100);
     	criteria.setQuery(query);
+    	mProgress.setMessage("Loading data ..");
+    	mProgress.show();
 		fnearby = new FoursquareVenuesNearbyRequest(this, flistener, criteria);
 		fnearby.execute(access_token);
     }
@@ -172,12 +194,21 @@ public class MapsActivity extends Activity implements
 			
 			@Override
 			public void onVenuesFetched(ArrayList<Venue> venues) {
-				mNearbyList = venues;
-				mAdapter.setData(mNearbyList);
-		        mListView.setAdapter(mAdapter);
-//				mAdapter.notifyDataSetChanged();
+				Log.e(TAG, "Got the list: " + venues.size());
+				Collections.sort(venues, new Comparator<Venue>() {
+					public int compare(Venue v1, Venue v2) {
+						return (int) (v1.getLocation().getDistance() - v2.getLocation().getDistance());
+					}
+				});
+				mNearbyList.clear();
+				for (Venue v : venues)
+					mNearbyList.add(v);
+				mAdapter.notifyDataSetChanged();
 				googleMap.clear();
 				setMarkerOnMap();
+				mProgress.dismiss();
+//				getWindow().setSoftInputMode(
+//					      WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 			}
 		};
     }
@@ -198,11 +229,6 @@ public class MapsActivity extends Activity implements
         // Set the interval ceiling to one minute
         mLocationRequest.setFastestInterval(LocationUtils.FAST_INTERVAL_CEILING_IN_MILLISECONDS);
 
-        // Open Shared Preferences
-        mPrefs = getSharedPreferences(LocationUtils.SHARED_PREFERENCES, Context.MODE_PRIVATE);
-
-        // Get an editor
-        mEditor = mPrefs.edit();
         /*
          * Create a new location client, using the enclosing class to
          * handle callbacks.
@@ -224,12 +250,22 @@ public class MapsActivity extends Activity implements
                         .show();
             }
         }
+        Log.e(TAG, "Iamhere");
+        Log.e(TAG, "Lat Lng: " + mPrefs.getString("lat", "") + ", " + mPrefs.getString("lng", ""));
+        if (access_token != null && access_token != "access_token") {
+        	Log.e(TAG, "It does contain access token");
+	        setCurrentLocation();
+	        handleSearch("food");
+        }
     }
  
     @Override
     protected void onResume() {
         super.onResume();
+        mPrefs			= getSharedPreferences(LoginActivity.MyPREFS, MODE_PRIVATE);
         initilizeMap();
+        getWindow().setSoftInputMode(
+			      WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         if (googleMap == null) {
         	Log.e("Maps", "Still not initialized");
         } else {
@@ -278,129 +314,17 @@ public class MapsActivity extends Activity implements
         }
     }
     
-//    TabHost.OnTabChangeListener tabChangeListener = new TabHost.OnTabChangeListener() {
-//		
-//		@Override
-//		public void onTabChanged(String tabId) {
-//			android.support.v4.app.FragmentManager fm =   getSupportFragmentManager();
-//			AndroidFragment androidFragment = (AndroidFragment) fm.findFragmentByTag("android");
-//			AppleFragment appleFragment = (AppleFragment) fm.findFragmentByTag("apple");
-//			android.support.v4.app.FragmentTransaction ft = fm.beginTransaction();
-//			
-//			/** Detaches the androidfragment if exists */
-//			if(androidFragment!=null)
-//				ft.detach(androidFragment);
-//			
-//			/** Detaches the applefragment if exists */
-//			if(appleFragment!=null)
-//				ft.detach(appleFragment);
-//			
-//			/** If current tab is android */
-//			if(tabId.equalsIgnoreCase("android")){
-//				
-//				if(androidFragment==null){		
-//					/** Create AndroidFragment and adding to fragmenttransaction */
-//					ft.add(R.id.realtabcontent,new AndroidFragment(), "android");						
-//				}else{
-//					/** Bring to the front, if already exists in the fragmenttransaction */
-//					ft.attach(androidFragment);						
-//				}
-//				
-//			}else{	/** If current tab is apple */
-//				if(appleFragment==null){
-//					/** Create AppleFragment and adding to fragmenttransaction */
-//					ft.add(R.id.realtabcontent,new AppleFragment(), "apple");						
-//				}else{
-//					/** Bring to the front, if already exists in the fragmenttransaction */
-//					ft.attach(appleFragment);						
-//				}
-//			}
-//			ft.commit();				
-//		}
-//	};
-    
-////    private void setCurrentLocation() {
-////		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//        
-//        Criteria criteria = new Criteria();
-//		criteria.setAccuracy(Criteria.ACCURACY_COARSE);	//default
-//		  
-//		  
-//		criteria.setCostAllowed(false); 
-//		  // get the best provider depending on the criteria
-//		String provider = locationManager.getBestProvider(criteria, false);
-//	    
-//		  // the last known location of this provider
-//		currentLocation = locationManager.getLastKnownLocation(provider);
-//		Log.e("pratik", "Got my location:" + googleMap.getMyLocation().toString());
-//		if (currentLocation == null) {
-//			Log.e("pratik", "Current location not found!!");
-//			Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-//			startActivity(intent);
-//		} else {
-//			Log.e("pratik", "Hurray Found it!!");
-//		}
-//	}
+
     
     public static void toastMessage(Context context, String message) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
     }
     
-//    private void loadNearbyPlaces() {
-//    	mProgress.show();
-//    	
-//    	new Thread() {
-//    		@Override
-//    		public void run() {
-//    			int status=0;
-//    			try {
-////    				mNearbyList = fapp.getNearby(currentLocation.getLatitude(), currentLocation.getLongitude());
-////    				mNearbyList = fnearby.
-//    			} catch (Exception e) {
-//    				status=1;
-//    				e.printStackTrace();
-//    			}
-//    			mHandler.dispatchMessage(mHandler.obtainMessage(status));
-//    		}
-//    	}.start();
-//    }
-    
-    private Handler mHandler = new Handler() {
-    	@Override
-    	public void handleMessage(Message msg) {
-    		mProgress.dismiss();
-    		
-    		if (msg.what == 0) {
-    			if (mNearbyList.size() == 0) {
-    				Toast.makeText(getApplicationContext(), "No nearby places available", Toast.LENGTH_SHORT).show();
-    				return;
-    			}
-    			
-    			runOnUiThread(new Runnable() {
-    				@Override
-					public void run() {
-    					mAdapter.setData(mNearbyList);    			
-    	    			mListView.setAdapter(mAdapter);
-    	    			setMarkerOnMap();
-    	    			googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-    	    	    			new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 15));
-					}
-				});
-    			
-    			
-    		} else {
-    			Toast.makeText(getApplicationContext(), "Failed to load nearby places", Toast.LENGTH_SHORT).show();
-    		}
-    	}
-    };
-
-	private VenuesCriteria criteria;
-    
     private void setMarkerOnMap() {
     	mapList.clear();
     	googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
     			new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 15));
-		Iterator<Venue> iter = mNearbyList.iterator();
+		Log.e(TAG, "Adapter count: " + mAdapter.getCount());
 		for (int i=0; i<mAdapter.getCount(); i++) {
 			Venue venue = mNearbyList.get(i);
 			Log.e(TAG, "Its venue number : " + i + "  name: " + venue.getName());
@@ -426,17 +350,11 @@ public class MapsActivity extends Activity implements
     @Override
     public void onConnected(Bundle bundle) {
         toastMessage(this, "Connected to google services");
-        currentLocation = mLocationClient.getLastLocation();
+//        currentLocation = mLocationClient.getLastLocation();
 //        Location loc = new Location("pratik");
-        currentLocation.setLatitude(40.713968);
-        currentLocation.setLongitude(-74.014855);
-        criteria.setLocation(currentLocation);
-        criteria.setRadius(10000);
-        criteria.setQuantity(100);
-        criteria.setQuery("food");
-        fnearby = new FoursquareVenuesNearbyRequest(this, flistener, criteria);
-		fnearby.execute(access_token);
-        
+        setCurrentLocation();
+//        handleSearch("food");
+       
 //        loadNearbyPlaces();
     }
 
@@ -542,5 +460,256 @@ public class MapsActivity extends Activity implements
             toastMessage(this, errorDialog.toString());
         }
     }
+    
+    /**
+     * Background Async Task to Load Google places
+     * */
+//    class LoadPlaces extends AsyncTask<String, String, String> {
+//
+//    	/**
+//    	 * Before starting background thread Show Progress Dialog
+//    	 * */
+//    	@Override
+//    	protected void onPreExecute() {
+//    		super.onPreExecute();
+//    		pDialog = new ProgressDialog(MapsActivity.this);
+//    		pDialog.setMessage(Html.fromHtml("<b>Search</b><br/>Loading Places..."));
+//    		pDialog.setIndeterminate(false);
+//    		pDialog.setCancelable(false);
+//    		pDialog.show();
+//    	}
+//
+//    	/**
+//    	 * getting Places JSON
+//    	 * */
+//    	protected String doInBackground(String... args) {
+//    		// creating Places class object
+//    		googlePlaces = new GooglePlaces();
+//    		
+//    		try {
+//    			// Separeate your place types by PIPE symbol "|"
+//    			// If you want all types places make it as null
+//    			// Check list of types supported by google
+//    			// 
+//    			String types = "cafe|restaurant"; // Listing places only cafes, restaurants
+//    			
+//    			// Radius in meters - increase this value if you don't find any places
+//    			double radius = 1000; // 1000 meters 
+//    			
+//    			// get nearest places
+//    			nearPlaces = googlePlaces.search(gps.getLatitude(),
+//    					gps.getLongitude(), radius, types);
+//    			
+//
+//    		} catch (Exception e) {
+//    			e.printStackTrace();
+//    		}
+//    		return null;
+//    	}
+//
+//    	/**
+//    	 * After completing background task Dismiss the progress dialog
+//    	 * and show the data in UI
+//    	 * Always use runOnUiThread(new Runnable()) to update UI from background
+//    	 * thread, otherwise you will get error
+//    	 * **/
+//    	protected void onPostExecute(String file_url) {
+//    		// dismiss the dialog after getting all products
+//    		mProgress.dismiss();
+//    		// updating UI from Background Thread
+//    		runOnUiThread(new Runnable() {
+//    			public void run() {
+//    				/**
+//    				 * Updating parsed Places into LISTVIEW
+//    				 * */
+//    				// Get json response status
+//    				String status = nearPlaces.status;
+//    				
+//    				// Check for all possible status
+//    				if(status.equals("OK")){
+//    					// Successfully got places details
+//    					if (nearPlaces.results != null) {
+//    						// loop through each place
+//    						for (Place p : nearPlaces.results) {
+//    							HashMap<String, String> map = new HashMap<String, String>();
+//    							
+//    							// Place reference won't display in listview - it will be hidden
+//    							// Place reference is used to get "place full details"
+//    							map.put(KEY_REFERENCE, p.reference);
+//    							
+//    							// Place name
+//    							map.put(KEY_NAME, p.name);
+//    							
+//    							
+//    							// adding HashMap to ArrayList
+//    							placesListItems.add(map);
+//    						}
+//    						// list adapter
+//    						ListAdapter adapter = new SimpleAdapter(MainActivity.this, placesListItems,
+//    				                R.layout.list_item,
+//    				                new String[] { KEY_REFERENCE, KEY_NAME}, new int[] {
+//    				                        R.id.reference, R.id.name });
+//    						
+//    						// Adding data into listview
+//    						lv.setAdapter(adapter);
+//    					}
+//    				}
+//    				else if(status.equals("ZERO_RESULTS")){
+//    					// Zero results found
+//    					alert.showAlertDialog(MainActivity.this, "Near Places",
+//    							"Sorry no places found. Try to change the types of places",
+//    							false);
+//    				}
+//    				else if(status.equals("UNKNOWN_ERROR"))
+//    				{
+//    					alert.showAlertDialog(MainActivity.this, "Places Error",
+//    							"Sorry unknown error occured.",
+//    							false);
+//    				}
+//    				else if(status.equals("OVER_QUERY_LIMIT"))
+//    				{
+//    					alert.showAlertDialog(MainActivity.this, "Places Error",
+//    							"Sorry query limit to google places is reached",
+//    							false);
+//    				}
+//    				else if(status.equals("REQUEST_DENIED"))
+//    				{
+//    					alert.showAlertDialog(MainActivity.this, "Places Error",
+//    							"Sorry error occured. Request is denied",
+//    							false);
+//    				}
+//    				else if(status.equals("INVALID_REQUEST"))
+//    				{
+//    					alert.showAlertDialog(MainActivity.this, "Places Error",
+//    							"Sorry error occured. Invalid Request",
+//    							false);
+//    				}
+//    				else
+//    				{
+//    					alert.showAlertDialog(MainActivity.this, "Places Error",
+//    							"Sorry error occured.",
+//    							false);
+//    				}
+//    			}
+//    		});
+//
+//    	}
+//
+//    }
  
 }
+
+
+
+
+//TabHost.OnTabChangeListener tabChangeListener = new TabHost.OnTabChangeListener() {
+//	
+//	@Override
+//	public void onTabChanged(String tabId) {
+//		android.support.v4.app.FragmentManager fm =   getSupportFragmentManager();
+//		AndroidFragment androidFragment = (AndroidFragment) fm.findFragmentByTag("android");
+//		AppleFragment appleFragment = (AppleFragment) fm.findFragmentByTag("apple");
+//		android.support.v4.app.FragmentTransaction ft = fm.beginTransaction();
+//		
+//		/** Detaches the androidfragment if exists */
+//		if(androidFragment!=null)
+//			ft.detach(androidFragment);
+//		
+//		/** Detaches the applefragment if exists */
+//		if(appleFragment!=null)
+//			ft.detach(appleFragment);
+//		
+//		/** If current tab is android */
+//		if(tabId.equalsIgnoreCase("android")){
+//			
+//			if(androidFragment==null){		
+//				/** Create AndroidFragment and adding to fragmenttransaction */
+//				ft.add(R.id.realtabcontent,new AndroidFragment(), "android");						
+//			}else{
+//				/** Bring to the front, if already exists in the fragmenttransaction */
+//				ft.attach(androidFragment);						
+//			}
+//			
+//		}else{	/** If current tab is apple */
+//			if(appleFragment==null){
+//				/** Create AppleFragment and adding to fragmenttransaction */
+//				ft.add(R.id.realtabcontent,new AppleFragment(), "apple");						
+//			}else{
+//				/** Bring to the front, if already exists in the fragmenttransaction */
+//				ft.attach(appleFragment);						
+//			}
+//		}
+//		ft.commit();				
+//	}
+//};
+
+////private void setCurrentLocation() {
+////	locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//  
+//  Criteria criteria = new Criteria();
+//	criteria.setAccuracy(Criteria.ACCURACY_COARSE);	//default
+//	  
+//	  
+//	criteria.setCostAllowed(false); 
+//	  // get the best provider depending on the criteria
+//	String provider = locationManager.getBestProvider(criteria, false);
+//  
+//	  // the last known location of this provider
+//	currentLocation = locationManager.getLastKnownLocation(provider);
+//	Log.e("pratik", "Got my location:" + googleMap.getMyLocation().toString());
+//	if (currentLocation == null) {
+//		Log.e("pratik", "Current location not found!!");
+//		Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+//		startActivity(intent);
+//	} else {
+//		Log.e("pratik", "Hurray Found it!!");
+//	}
+//}
+
+//private void loadNearbyPlaces() {
+//mProgress.show();
+//
+//new Thread() {
+//	@Override
+//	public void run() {
+//		int status=0;
+//		try {
+////			mNearbyList = fapp.getNearby(currentLocation.getLatitude(), currentLocation.getLongitude());
+////			mNearbyList = fnearby.
+//		} catch (Exception e) {
+//			status=1;
+//			e.printStackTrace();
+//		}
+//		mHandler.dispatchMessage(mHandler.obtainMessage(status));
+//	}
+//}.start();
+//}
+
+//private Handler mHandler = new Handler() {
+//@Override
+//public void handleMessage(Message msg) {
+//	mProgress.dismiss();
+//	
+//	if (msg.what == 0) {
+//		if (mNearbyList.size() == 0) {
+//			Toast.makeText(getApplicationContext(), "No nearby places available", Toast.LENGTH_SHORT).show();
+//			return;
+//		}
+//		
+//		runOnUiThread(new Runnable() {
+//			@Override
+//			public void run() {
+//				mAdapter.setData(mNearbyList);    			
+//    			mListView.setAdapter(mAdapter);
+//    			setMarkerOnMap();
+//    			googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+//    	    			new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 15));
+//			}
+//		});
+//		
+//		
+//	} else {
+//		Toast.makeText(getApplicationContext(), "Failed to load nearby places", Toast.LENGTH_SHORT).show();
+//	}
+//}
+//}

@@ -3,15 +3,16 @@ package com.projectx.loginandmaps;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-import br.com.condesales.models.Category;
-import br.com.condesales.models.Venue;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import br.com.condesales.models.Category;
+import br.com.condesales.models.Venue;
 
 public class NearbyAdapter extends BaseAdapter {
 	private ArrayList<Venue> mVenueList;
@@ -55,7 +56,7 @@ public class NearbyAdapter extends BaseAdapter {
 		}
 
 		Venue venue 	= mVenueList.get(position);
-	
+		Log.e("MapsActivity", "name of venue: " + venue.getName());
 		holder.mNameTxt.setText(venue.getName());
 		holder.mDistanceTxt.setText(formatDistance(venue.getLocation().getDistance()));
 		ArrayList<Category> cat = venue.getCategories();
