@@ -14,11 +14,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import br.com.condesales.criterias.VenuesCriteria;
-import br.com.condesales.listeners.FoursquareVenuesRequestListener;
-import br.com.condesales.models.Category;
-import br.com.condesales.models.Venue;
-import br.com.condesales.tasks.venues.FoursquareVenuesNearbyRequest;
+//import br.com.condesales.criterias.VenuesCriteria;
+//import br.com.condesales.listeners.FoursquareVenuesRequestListener;
+//import br.com.condesales.models.Category;
+//import br.com.condesales.models.Venue;
+//import br.com.condesales.tasks.venues.FoursquareVenuesNearbyRequest;
 public class ChangeLocation extends Activity {
 	
 	private SharedPreferences prefs;

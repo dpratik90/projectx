@@ -2,7 +2,7 @@ package com.projectx.loginandmaps;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,9 +11,10 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
-import br.com.condesales.models.Category;
-import br.com.condesales.models.Venue;
+//import br.com.condesales.models.Category;
+//import br.com.condesales.models.Venue;
 
+@SuppressLint("InflateParams")
 public class NearbyAdapter extends BaseAdapter {
 	private ArrayList<Place> mPlaceList;
 	private LayoutInflater mInflater;
@@ -58,7 +59,7 @@ public class NearbyAdapter extends BaseAdapter {
 		Place place				 	= mPlaceList.get(position);
 		Log.e("MapsActivity", "name of venue: " + place.name);
 		holder.mNameTxt.setText(place.name);
-		holder.mDistanceTxt.setText(formatDistance(MapsActivity.gps2m(place.geometry.location.lat, place.geometry.location.lng, place.geometry.location.lat, place.geometry.location.lng)));
+		holder.mDistanceTxt.setText(formatDistance(MapsActivity.gps2m(place.geometry.location.lat, place.geometry.location.lng, 40.713968, -74.014855)));
 		
 		holder.mCategories.setText(place.formatted_address);
 		
@@ -66,7 +67,7 @@ public class NearbyAdapter extends BaseAdapter {
 	}
 	
 	private String formatDistance(double distance) {
-		String result = "";
+		Log.e("MapsActivity", "Distance is: " + distance);
 		
 		double d = distance*0.000621371;
 		

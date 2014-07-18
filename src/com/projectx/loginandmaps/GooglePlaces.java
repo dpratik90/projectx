@@ -22,7 +22,7 @@ public class GooglePlaces {
 	private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
 	// Google API Key
-	private static final String API_KEY = "AIzaSyB5u2eJSDYpaQ40We3Mc0292eYPr23Qgls"; // place your API key here
+	private static final String API_KEY = "AIzaSyDKdDuNjvPdIPz05Xqnnr3lVH6U8N11cDc"; // place your API key here
 
 	// Google Places serach url's
 	private static final String PLACES_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/search/json?";
@@ -54,6 +54,7 @@ public class GooglePlaces {
 			HttpRequest request = httpRequestFactory
 					.buildGetRequest(new GenericUrl(PLACES_SEARCH_URL));
 			request.getUrl().put("key", API_KEY);
+			Log.e("MapsActivity", "LAt lng found: " + _latitude + ", " + _longitude);
 			request.getUrl().put("location", _latitude + "," + _longitude);
 			request.getUrl().put("radius", _radius); // in meters
 			request.getUrl().put("sensor", "false");
