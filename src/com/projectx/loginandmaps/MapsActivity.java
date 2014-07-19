@@ -93,7 +93,7 @@ public class MapsActivity extends Activity implements
 	private ProgressDialog mProgress;
 	private Map<Integer, Marker> mapList;
 	private Location currentLocation;
-	private String lastSearchQuery;
+	public static String lastSearchQuery = "default";
 	private Marker focusedMarker;
 //	private static FoursquareVenuesRequestListener flistener;
 //	private static FoursquareVenuesNearbyRequest fnearby;
@@ -302,8 +302,8 @@ public class MapsActivity extends Activity implements
 				@Override
 				public int compare(Place lhs, Place rhs) {
 					// TODO Auto-generated method stub
-					double dist1 = gps2m(lhs.geometry.location.lat, lhs.geometry.location.lng,40.713968, -74.014855);
-					double dist2 = gps2m(rhs.geometry.location.lat, rhs.geometry.location.lng,40.713968, -74.014855);
+					double dist1 = gps2m(lhs.geometry.location.lat, lhs.geometry.location.lng,currentLocation.getLatitude(), currentLocation.getLongitude());
+					double dist2 = gps2m(rhs.geometry.location.lat, rhs.geometry.location.lng,currentLocation.getLatitude(), currentLocation.getLongitude());
 					return (int) (dist1 - dist2);
 				}
 			});
@@ -481,7 +481,7 @@ public class MapsActivity extends Activity implements
     private void setMarkerOnMap() {
     	mapList.clear();
     	googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-    			new LatLng(40.713968, -74.014855), 15));
+    			new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 15));
     	
 		Log.e(TAG, "Adapter count: " + mAdapter.getCount());
 		for (int i=0; i<mAdapter.getCount(); i++) {
@@ -691,7 +691,7 @@ public class MapsActivity extends Activity implements
     			Log.e(TAG, "Current Location(npe): " + currentLocation  + "type: " + types);
     			
     			// get nearest places
-    			nearPlaces = googlePlaces.search(40.713968, -74.014855, radius, types);
+    			nearPlaces = googlePlaces.search(currentLocation.getLatitude(), currentLocation.getLongitude(), radius, types);
     			
     			
 

@@ -34,6 +34,9 @@ public class Place implements Serializable {
 	@Key
 	public String formatted_phone_number;
 	
+	@Key
+	public String[] types;
+	
 
 	@Override
 	public String toString() {
