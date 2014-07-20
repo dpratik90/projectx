@@ -5,14 +5,14 @@
     android:baselineAligned="false"
     android:orientation="vertical"  >
 
-    <EditText
+    <!-- <EditText
         android:id="@+id/edittext"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"   
         android:inputType="text" 
         android:windowSoftInputMode="stateHidden"
         android:hint="Search..">
-    </EditText>
+    </EditText> -->
     
 	<LinearLayout
 	    android:layout_width="match_parent"
@@ -44,6 +44,26 @@
 			android:layout_height="wrap_content"
 		/>
     </LinearLayout>
+    
+	<LinearLayout android:id="@+id/footer" android:layout_width="fill_parent"
+	    android:layout_height="wrap_content" android:orientation="horizontal"
+	    android:layout_alignParentBottom="true" style="@android:style/ButtonBar">
+	
+	    <Button android:id="@+id/restaurants" android:layout_width="wrap_content"
+	        android:layout_height="wrap_content" android:layout_weight="1"
+	        android:text="@string/restaurant" />
+	
+	    <Button android:id="@+id/gas" android:layout_width="wrap_content"
+	        android:layout_height="wrap_content" android:layout_weight="1"
+	        android:text="@string/gas_station" />
+	    
+	    <Button android:id="@+id/supermarket" android:layout_width="wrap_content"
+	        android:layout_height="wrap_content" android:layout_weight="1"
+	        android:text="@string/supermarket" />
+	    <Button android:id="@+id/bar" android:layout_width="wrap_content"
+	        android:layout_height="wrap_content" android:layout_weight="1"
+	        android:text="@string/bar" />
+	</LinearLayout>
  
     <!--  <fragment
         android:id="@+id/map"

@@ -44,19 +44,20 @@ public class Banks {
 	
 	public static String getOffer(String category, String bank, String card) {
 		ArrayList<Integer[]> result = new ArrayList<Integer[]>();
-		if (category == "restaurant") {
+		Log.e(MapsActivity.TAG, "Request for offer on : " + category + ", " + bank +", " + card);
+		if (category.contains("restaurant")) {
 			if (offers.get(bank).get(card).containsKey(0))
 				result.add(offers.get(bank).get(card).get(0));
 		}
-		else if (category == "gas_station") {
+		else if (category.contains("gas")) {
 			if (offers.get(bank).get(card).containsKey(1))
 				result.add(offers.get(bank).get(card).get(1));
 		}
-		else if (category == "bar") {
+		else if (category.contains("bar")) {
 			if (offers.get(bank).get(card).containsKey(2))
 				result.add(offers.get(bank).get(card).get(2));
 		}
-		else if (category == "grocery_or_supermarket") {
+		else if (category.contains("grocery_or_supermarket")) {
 			if (offers.get(bank).get(card).containsKey(3))
 				result.add(offers.get(bank).get(card).get(3));
 		}

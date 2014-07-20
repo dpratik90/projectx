@@ -26,7 +26,8 @@
 	    android:layout_marginTop="10dp"
 	    android:layout_toLeftOf="@id/tv_distance"
 	    android:text="Ciwalk"
-	    android:textSize="14sp" />
+	    android:textSize="14sp"
+	    android:textColor="#88945f" />
 	<TextView 
 	    android:id="@+id/tv_categories"
 	    android:layout_width="fill_parent"

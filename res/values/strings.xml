@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="hello">Hello World, Main!</string>
-    <string name="app_name">AndroidFoursquare</string>
+    <string name="app_name">RewardsApp</string>
     <string name="latitude_longitude">%1$.8f, %2$.8f</string>
     <string name="search_title">Search..</string>
     <string name="play_services_available">Google Play services is available</string>
     <string name="enter_text">Search..</string>
     <string name="card_prompt">Choose a card</string>
+    <string name="restaurant">Restaurant</string>
+    <string name="gas_station">Gas Station</string>
+    <string name="bar">Bar</string>
+    <string name="supermarket">SuperMarket</string>
     <string-array name="banks">
         <item>American Express</item>
         <item>CitiBank</item>

@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -27,6 +26,7 @@ import android.util.FloatMath;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -45,6 +45,7 @@ import android.widget.Toast;
 //import br.com.condesales.models.Category;
 //import br.com.condesales.models.Venue;
 //import br.com.condesales.tasks.venues.FoursquareVenuesNearbyRequest;
+
 
 
 
@@ -104,6 +105,7 @@ public class MapsActivity extends Activity implements
     // Handle to a SharedPreferences editor
     SharedPreferences.Editor mEditor;
     EditText search;
+    Button gas, restaurant, supermarket, bar;
     
     
     
@@ -226,20 +228,55 @@ public class MapsActivity extends Activity implements
         Log.e(TAG, "Acess toekn: " + access_token);
         mapList = new HashMap<Integer, Marker>();
 //        fnearby = new FoursquareVenuesNearbyRequest(this, flistener, criteria);
-        search = (EditText) findViewById(R.id.edittext);
-        
-        search.setOnEditorActionListener(new OnEditorActionListener() {
+//        search = (EditText) findViewById(R.id.edittext);
+//        
+//        search.setOnEditorActionListener(new OnEditorActionListener() {
+//			
+//			@Override
+//			public boolean onEditorAction(final TextView v, int actionId, KeyEvent event) {
+//				InputMethodManager inputManager = (InputMethodManager) getApplicationContext()
+//			            .getSystemService(Context.INPUT_METHOD_SERVICE);
+//				inputManager.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+//				handleSearch(v.getText().toString());
+//			    
+//				return true;
+//			}
+//		});
+        bar = (Button) findViewById(R.id.bar);
+        bar.setOnClickListener(new OnClickListener() {
 			
 			@Override
-			public boolean onEditorAction(final TextView v, int actionId, KeyEvent event) {
-				InputMethodManager inputManager = (InputMethodManager) getApplicationContext()
-			            .getSystemService(Context.INPUT_METHOD_SERVICE);
-				inputManager.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-				handleSearch(v.getText().toString());
-			    
-				return true;
+			public void onClick(View v) {
+				handleSearch("bar");
 			}
 		});
+        
+        restaurant = (Button) findViewById(R.id.restaurants);
+        restaurant.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				handleSearch("restaurant");
+			}
+		});
+        
+        gas = (Button) findViewById(R.id.gas);
+        gas.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				handleSearch("gas");
+			}
+		});
+        supermarket = (Button) findViewById(R.id.supermarket);
+        supermarket.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				handleSearch("supermarket");
+			}
+		});
+        
         
         mListView.setOnItemClickListener(new OnItemClickListener() {
 
@@ -297,19 +334,41 @@ public class MapsActivity extends Activity implements
 		
 		public void onPlacesFetched(PlacesList places) {
 			List<Place> ps = places.results;
-			Collections.sort(ps, new Comparator<Place>() {
+			List<Place> relavent = new ArrayList<Place>();
+			if (lastSearchQuery != "all") {
+				for (Place p : ps) { 
+					Log.e(TAG, "Considering place : " + p.name);
+					for (String type: p.types) {
+						Log.e(TAG, "with type: " + type);
+						
+						if (type.contains(lastSearchQuery)) {
+							relavent.add(p);
+							Log.e(TAG, "Hurray found it!!");
+							break;
+							
+						}
+					}
+				}
+			}
+			else {
+				for (Place p : ps) {
+					relavent.add(p);
+				}
+			}
+			Collections.sort(relavent, new Comparator<Place>() {
 
 				@Override
 				public int compare(Place lhs, Place rhs) {
 					// TODO Auto-generated method stub
 					double dist1 = gps2m(lhs.geometry.location.lat, lhs.geometry.location.lng,currentLocation.getLatitude(), currentLocation.getLongitude());
 					double dist2 = gps2m(rhs.geometry.location.lat, rhs.geometry.location.lng,currentLocation.getLatitude(), currentLocation.getLongitude());
+					Log.e(TAG,"Distances: " + dist1 + ", " + dist2);
 					return (int) (dist1 - dist2);
 				}
 			});
 			
 			myNearbyList.clear();
-			for (Place v : ps)
+			for (Place v : relavent)
 				myNearbyList.add(v);
 			mAdapter.notifyDataSetChanged();
 			googleMap.clear();

@@ -47,7 +47,7 @@
         <activity android:name=".MapsActivity"
                	  android:windowSoftInputMode="stateHidden|adjustResize"
             	  android:theme="@style/Theme.AppCompat.Light"
-                  android:label="Nearby from foursquare">
+                  android:label="Nearby From Google">
             <meta-data android:name="android.app.searchable"
             android:resource="@xml/searchable" />
         </activity>

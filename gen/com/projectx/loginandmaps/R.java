@@ -1290,7 +1290,7 @@ containing a value of this type.
         public static final int success=0x7f02007f;
     }
     public static final class id {
-        public static final int LinearLayout01=0x7f070059;
+        public static final int LinearLayout01=0x7f07005c;
         public static final int action_bar=0x7f07001f;
         public static final int action_bar_activity_content=0x7f070015;
         public static final int action_bar_container=0x7f07001e;
@@ -1304,10 +1304,11 @@ containing a value of this type.
         public static final int action_mode_close_button=0x7f070027;
         public static final int activity_chooser_view_content=0x7f070028;
         public static final int always=0x7f07000b;
+        public static final int bar=0x7f070053;
         public static final int beginning=0x7f070011;
         public static final int btnLogin=0x7f07004c;
         public static final int btnMain=0x7f070043;
-        public static final int btnRegister=0x7f070057;
+        public static final int btnRegister=0x7f07005a;
         public static final int btnSubmit=0x7f070042;
         public static final int cancel=0x7f07004a;
         public static final int card_name=0x7f070045;
@@ -1319,13 +1320,13 @@ containing a value of this type.
         public static final int disableHome=0x7f070008;
         public static final int dropdown=0x7f07000f;
         public static final int edit_query=0x7f070033;
-        public static final int edittext=0x7f07004d;
         public static final int end=0x7f070013;
         public static final int expand_activities_button=0x7f070029;
         public static final int expanded_menu=0x7f07002f;
-        public static final int footer=0x7f070053;
+        public static final int footer=0x7f07004f;
         public static final int frame=0x7f07004b;
-        public static final int header=0x7f070052;
+        public static final int gas=0x7f070051;
+        public static final int header=0x7f070056;
         public static final int home=0x7f070014;
         public static final int homeAsUp=0x7f070005;
         public static final int hybrid=0x7f07001c;
@@ -1333,12 +1334,12 @@ containing a value of this type.
         public static final int ifRoom=0x7f07000a;
         public static final int image=0x7f07002a;
         public static final int lat=0x7f070047;
-        public static final int link_to_login=0x7f070058;
+        public static final int link_to_login=0x7f07005b;
         public static final int listMode=0x7f070001;
         public static final int list_item=0x7f07002c;
         public static final int lng=0x7f070048;
-        public static final int lv_places=0x7f07004f;
-        public static final int map=0x7f07004e;
+        public static final int lv_places=0x7f07004e;
+        public static final int map=0x7f07004d;
         public static final int middle=0x7f070012;
         public static final int my_cards=0x7f070044;
         public static final int never=0x7f070009;
@@ -1347,12 +1348,13 @@ containing a value of this type.
         public static final int progress_circular=0x7f070018;
         public static final int progress_horizontal=0x7f070019;
         public static final int radio=0x7f070032;
-        public static final int reg_email=0x7f070055;
-        public static final int reg_fullname=0x7f070054;
-        public static final int reg_password=0x7f070056;
+        public static final int reg_email=0x7f070058;
+        public static final int reg_fullname=0x7f070057;
+        public static final int reg_password=0x7f070059;
+        public static final int restaurants=0x7f070050;
         public static final int satellite=0x7f07001a;
         public static final int save=0x7f070049;
-        public static final int search=0x7f07005a;
+        public static final int search=0x7f07005d;
         public static final int search_badge=0x7f070035;
         public static final int search_bar=0x7f070034;
         public static final int search_button=0x7f070036;
@@ -1371,13 +1373,14 @@ containing a value of this type.
         public static final int spinner2=0x7f070041;
         public static final int split_action_bar=0x7f070021;
         public static final int submit_area=0x7f07003c;
+        public static final int supermarket=0x7f070052;
         public static final int tabMode=0x7f070002;
         public static final int terrain=0x7f07001b;
         public static final int title=0x7f07002e;
         public static final int top_action_bar=0x7f070023;
         public static final int tv_categories=0x7f070046;
-        public static final int tv_distance=0x7f070050;
-        public static final int tv_name=0x7f070051;
+        public static final int tv_distance=0x7f070054;
+        public static final int tv_name=0x7f070055;
         public static final int up=0x7f070024;
         public static final int useLogo=0x7f070003;
         public static final int withText=0x7f07000c;
@@ -1515,6 +1518,7 @@ containing a value of this type.
         [CHAR LIMIT=70] 
          */
         public static final int auth_client_using_bad_version_title=0x7f060022;
+        public static final int bar=0x7f060032;
         public static final int card_prompt=0x7f06002f;
         /**  Button in confirmation dialog to enable Google Play services.  Clicking it
         will direct user to application settings of Google Play services where they
@@ -1588,6 +1592,7 @@ containing a value of this type.
          */
         public static final int common_signin_button_text_long=0x7f060021;
         public static final int enter_text=0x7f06002e;
+        public static final int gas_station=0x7f060031;
         public static final int hello=0x7f060029;
         public static final int latitude_longitude=0x7f06002b;
         public static final int loading=0x7f060000;
@@ -1595,7 +1600,9 @@ containing a value of this type.
          */
         public static final int location_client_powered_by_google=0x7f060028;
         public static final int play_services_available=0x7f06002d;
+        public static final int restaurant=0x7f060030;
         public static final int search_title=0x7f06002c;
+        public static final int supermarket=0x7f060033;
     }
     public static final class style {
         /** 

@@ -58,4 +58,5 @@ public class Place implements Serializable {
 		public double lng;
 	}
 	
+	
 }

@@ -6,6 +6,8 @@ import java.util.HashMap;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.location.Location;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,9 +22,21 @@ import android.widget.TextView;
 public class NearbyAdapter extends BaseAdapter {
 	private ArrayList<Place> mPlaceList;
 	private LayoutInflater mInflater;
+	private Context context;
+	private SharedPreferences mPrefs;
+	
+	//Current location
+	private double lat;
+	private double lng;
 
 	public NearbyAdapter(Context c) {
+		context = c;
         mInflater 			= LayoutInflater.from(c);
+        mPrefs			= c.getSharedPreferences(LoginActivity.MyPREFS, c.MODE_PRIVATE);
+        lat = Double.parseDouble(mPrefs.getString("lat", ""));
+        Log.e(MapsActivity.TAG, "Nearby lat: " + lat);
+        lng = Double.parseDouble(mPrefs.getString("lng", ""));
+        Log.e(MapsActivity.TAG, "Nearby lng: " + lng);
     }
 
 	public void setData(ArrayList<Place> poolList) {
@@ -62,7 +76,14 @@ public class NearbyAdapter extends BaseAdapter {
 		Place place				 	= mPlaceList.get(position);
 //		Log.e("MapsActivity", "name of venue: " + place.name);
 		holder.mNameTxt.setText(place.name);
-		holder.mDistanceTxt.setText(formatDistance(MapsActivity.gps2m(place.geometry.location.lat, place.geometry.location.lng, 40.713968, -74.014855)));
+		Log.e(MapsActivity.TAG, "NEARBY location: " + place.geometry.location);
+		Location placeLocation = new Location("pratik");
+		placeLocation.setLatitude(place.geometry.location.lat);
+		placeLocation.setLongitude(place.geometry.location.lng);
+		Location currentLocation = new Location("pratik");
+		currentLocation.setLatitude(lat);
+		currentLocation.setLongitude(lng);
+		holder.mDistanceTxt.setText(String.format("%.2f", currentLocation.distanceTo(placeLocation) * 0.000621371) + "mi");
 		
 		String offers = "";
 		String query = MapsActivity.lastSearchQuery;
@@ -71,26 +92,29 @@ public class NearbyAdapter extends BaseAdapter {
 		if (query == "all") {
 			for (String type : place.types) {
 				Log.e(MapsActivity.TAG, "type: " + type);
-				if (type == "restaurant" || type == "bar" || type == "gas_station" || type == "grocery_or_supermarket") {
+//				if (type == "restaurant" || type == "bar" || type == "gas_station" || type == "grocery_or_supermarket") {
 					ArrayList<String> banks = new ArrayList<String>(mCards.keySet());
 					Log.e(MapsActivity.TAG, "Banks: " + banks);
+					Log.e(MapsActivity.TAG, "I am here");
 					for (String bank : banks) {
-						offers += "Bank: " + bank + "  ";
 						ArrayList<String> cards = mCards.get(bank);
 						Log.e(MapsActivity.TAG, "cards: " + cards);
 						for (String card : cards) {
 							Log.e(MapsActivity.TAG, "Type of restaurant: " + type);
-							offers += Banks.getOffer(type, bank, card);
+							String offer = Banks.getOffer(type, bank, card);
+							if (offer != "") {
+								offers += bank + "," + card + ":";
+								offers += Banks.getOffer(type, bank, card);
+							}
 						}
 					}
 				}
-			}
+//			}
 		}
 		else {
 			ArrayList<String> banks = new ArrayList<String>(mCards.keySet());
 			Log.e(MapsActivity.TAG, "Banks: " + banks);
 			for (String bank : banks) {
-				offers += "Bank: " + bank + "  ";
 				ArrayList<String> cards = mCards.get(bank);
 				Log.e(MapsActivity.TAG, "Cards : " + cards);
 				for (String card : cards) {
@@ -103,10 +127,17 @@ public class NearbyAdapter extends BaseAdapter {
 						type = "bar";
 					else if (query.contains("supermarket"))
 						type = "grocery_or_supermarket";
+					offers += bank + "," + card + ":";
 					offers += Banks.getOffer(type, bank, card);
 				}
 			}
 		}
+		
+//		for (String type : place.types) {
+//			offers += type + "  ";
+//		}
+		
+		Log.e(MapsActivity.TAG, "Offers: " + Banks.offers);
 		holder.mCategories.setText(offers);
 		
         return convertView;
