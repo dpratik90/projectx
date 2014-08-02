@@ -102,9 +102,11 @@ public class NearbyAdapter extends BaseAdapter {
 						for (String card : cards) {
 							Log.e(MapsActivity.TAG, "Type of restaurant: " + type);
 							String offer = Banks.getOffer(type, bank, card);
+							Log.e(MapsActivity.TAG, "Offer>>>>>>>>>: " + offer);
 							if (offer != "") {
+								Log.e(MapsActivity.TAG, "Offer >>>>>>>>>>>>>>");
 								offers += bank + "," + card + ":";
-								offers += Banks.getOffer(type, bank, card);
+								offers += offer;
 							}
 						}
 					}
@@ -120,15 +122,18 @@ public class NearbyAdapter extends BaseAdapter {
 				for (String card : cards) {
 					String type = "";
 					if (query.contains("restaurant"))
-						type = query;
+						type = "restaurant";
 					else if (query.contains("gas"))
 						type = "gas_station";
 					else if (query.contains("bar"))
 						type = "bar";
 					else if (query.contains("supermarket"))
 						type = "grocery_or_supermarket";
-					offers += bank + "," + card + ":";
-					offers += Banks.getOffer(type, bank, card);
+					
+					if (Banks.getOffer(type, bank, card) != "") {
+						offers += bank + "," + card + ":";
+						offers += Banks.getOffer(type, bank, card);
+					}
 				}
 			}
 		}

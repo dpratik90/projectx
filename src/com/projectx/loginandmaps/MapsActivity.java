@@ -25,6 +25,7 @@ import android.text.Html;
 import android.util.FloatMath;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
@@ -45,6 +46,7 @@ import android.widget.Toast;
 //import br.com.condesales.models.Category;
 //import br.com.condesales.models.Venue;
 //import br.com.condesales.tasks.venues.FoursquareVenuesNearbyRequest;
+
 
 
 
@@ -313,6 +315,15 @@ public class MapsActivity extends Activity implements
 //    }
     
     
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case android.R.id.home:
+            this.finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
     
     public void handleSearch(String query) {
     	lastSearchQuery = query;
@@ -360,10 +371,19 @@ public class MapsActivity extends Activity implements
 				@Override
 				public int compare(Place lhs, Place rhs) {
 					// TODO Auto-generated method stub
-					double dist1 = gps2m(lhs.geometry.location.lat, lhs.geometry.location.lng,currentLocation.getLatitude(), currentLocation.getLongitude());
-					double dist2 = gps2m(rhs.geometry.location.lat, rhs.geometry.location.lng,currentLocation.getLatitude(), currentLocation.getLongitude());
-					Log.e(TAG,"Distances: " + dist1 + ", " + dist2);
-					return (int) (dist1 - dist2);
+					Location lhs_loc = new Location("pratik");
+					Location rhs_loc = new Location("pratik");
+					lhs_loc.setLatitude(lhs.geometry.location.lat);
+					lhs_loc.setLongitude(lhs.geometry.location.lng);
+					rhs_loc.setLatitude(rhs.geometry.location.lat);
+					rhs_loc.setLongitude(rhs.geometry.location.lng);
+				
+					Log.e(TAG, "currentlucation: >>>>>>> : " + currentLocation.getLatitude() + "," + currentLocation.getLongitude());
+					Log.e(TAG, "lhs: " + currentLocation.distanceTo(lhs_loc));
+					Log.e(TAG, "rhs: " + currentLocation.distanceTo(rhs_loc));
+					int result =  (int) (currentLocation.distanceTo(lhs_loc) - currentLocation.distanceTo(rhs_loc));
+					Log.e(TAG, "Result: " + result);
+					return result;
 				}
 			});
 			
@@ -478,6 +498,9 @@ public class MapsActivity extends Activity implements
     @Override
     protected void onResume() {
         super.onResume();
+        //check if list of banks is empty
+        if (Banks.mCards.isEmpty())
+        	onBackPressed();
         lastKnownLoc = gps.locationManager.getLastKnownLocation("pratik");
         mPrefs			= getSharedPreferences(LoginActivity.MyPREFS, MODE_PRIVATE);
         initilizeMap();

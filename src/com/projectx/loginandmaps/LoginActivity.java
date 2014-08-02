@@ -60,7 +60,7 @@ public class LoginActivity extends Activity {
         FsqAuthListener listener = new FsqAuthListener() {
         	@Override
         	public void onSuccess() {
-        		Toast.makeText(getApplicationContext(), "Connected as " + fsapp.getUserName(), Toast.LENGTH_SHORT).show();
+//        		Toast.makeText(getApplicationContext(), "Connected as " + fsapp.getUserName(), Toast.LENGTH_SHORT).show();
 //        		nameTv.setText("Connected as " + mFsqApp.getUserName());
         	}
         	
@@ -128,7 +128,7 @@ public class LoginActivity extends Activity {
         if (exception == null) {
             String accessToken = tokenResponse.getAccessToken();
             // Success.
-            toastMessage(this, "Access token: " + accessToken);
+//            toastMessage(this, "Access token: " + accessToken);
             
             // Persist the token for later use. In this example, we save
             // it to shared prefs.

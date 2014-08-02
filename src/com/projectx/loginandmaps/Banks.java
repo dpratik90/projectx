@@ -28,7 +28,6 @@ public class Banks {
 	HashMap<String, ArrayList<String>> allCards = new HashMap<String, ArrayList<String>>();
 	
 	
-	
 	public static void addCard(String bank, String card) {
 		if (mCards.containsKey(bank))
 			mCards.get(bank).add(card);
@@ -38,8 +37,21 @@ public class Banks {
 		}
 	}
 	
-	public static HashMap<String, ArrayList<String>> getMyCards() {
-		return mCards;
+	public static void removeCard(String bank, String card) {
+		if (mCards.containsKey(bank)) {
+			if (mCards.containsKey(card)) {
+				mCards.remove(card);
+			}
+		}
+	}
+	
+	public static ArrayList<String> getMyCards() {
+		ArrayList<String> result = new ArrayList<String>();
+		for (String bank : mCards.keySet()) {
+			for (String card : mCards.get(bank))
+				result.add(bank + "," + card);
+		}
+		return result;
 	}
 	
 	public static String getOffer(String category, String bank, String card) {
