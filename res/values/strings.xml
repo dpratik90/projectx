@@ -11,6 +11,8 @@
     <string name="gas_station">Gas Station</string>
     <string name="bar">Bar</string>
     <string name="supermarket">SuperMarket</string>
+    <string name="hello_world">Hello World..</string>
+    <string name="action_settings">Action Settings..</string>
     <string-array name="banks">
         <item>American Express</item>
         <item>CitiBank</item>
