@@ -48,8 +48,12 @@ public class AddCard extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				Intent i = new Intent(getApplicationContext(), MapsActivity.class);
-				startActivity(i);
+				if (!banks.isEmpty()) {
+					Intent i = new Intent(getApplicationContext(), MapsActivity.class);
+					startActivity(i);
+				} else {
+					Toast.makeText(getApplicationContext(), "Please add a card first", Toast.LENGTH_SHORT).show();
+				}
 			}
 		});
 		mListView = (ListView) findViewById(R.id.my_cards);
@@ -131,7 +135,17 @@ public class AddCard extends Activity {
 	
 		spinner2 = (Spinner) findViewById(R.id.spinner2);
 //		cards = new ArrayList<String>();
-		cards = new ArrayList<String>(Banks.offers.get(spinner1.getSelectedItem().toString()).keySet());
+		if (spinner1 == null)
+			Log.e(MapsActivity.TAG, "spinner 1 is not set");
+		Log.e(MapsActivity.TAG, "Selected text: " + spinner1.getSelectedItem().toString());
+		String selectedText = spinner1.getSelectedItem().toString();
+		cards = new ArrayList<String>();
+		if (!selectedText.equals("Please Select a Bank")) {
+			for (String card : Banks.offers.get(spinner1.getSelectedItem().toString()).keySet())
+				cards.add(card);
+		}
+			
+		cards.add(0, "Please Select a Card");
 		Log.e("MapsActivity", cards.toString());
 		cardsAdapter = new ArrayAdapter<String>(this,
 			android.R.layout.simple_spinner_item, cards);
@@ -183,12 +197,19 @@ public class AddCard extends Activity {
 		
 		  @Override
 		  public void onClick(View v) {
-			  if (!banks.contains(spinner1.getSelectedItem().toString() + "," + spinner2.getSelectedItem().toString())) {
+			  if (!banks.contains(spinner1.getSelectedItem().toString() + "," + spinner2.getSelectedItem().toString())
+					  && spinner1.getSelectedItem().toString() != "Please Select a Bank"
+					  && spinner2.getSelectedItem().toString() != "Please Select a Card") {
 				  Banks.addCard(spinner1.getSelectedItem().toString() , spinner2.getSelectedItem().toString());
 				  banks.add(spinner1.getSelectedItem().toString() + "," + spinner2.getSelectedItem().toString());
 				  mAdapter.notifyDataSetChanged();
 	//			  startActivity(new Intent(getApplicationContext(), BasicActivity.class));
-			  } else {
+			  } 
+			  else if(spinner1.getSelectedItem().toString() == "Please Select a Bank"
+					  || spinner2.getSelectedItem().toString() == "Please Select a Card") {
+				  Toast.makeText(getApplicationContext(), "Please select a card", Toast.LENGTH_SHORT).show();
+			  }
+			  else {
 				  Toast.makeText(getApplicationContext(), "Card already added", Toast.LENGTH_SHORT).show();
 			  }
 		  }

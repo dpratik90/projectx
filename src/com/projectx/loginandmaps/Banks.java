@@ -138,7 +138,7 @@ public class Banks {
 				
 			}
 			else {
-				String[] cards = {"Chase Freedom Card", "Chanse Sapphire Preferred Card"};
+				String[] cards = {"Chase Freedom Card", "Chase Sapphire Preferred Card"};
 				for (String card : cards) {
 					offers.get(bank).put(card, new HashMap<Integer, Integer[]>());
 					if (card == "Chase Freedom Card") {

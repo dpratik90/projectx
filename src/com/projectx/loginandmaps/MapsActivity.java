@@ -218,7 +218,7 @@ public class MapsActivity extends Activity implements
         
 //        fapp 			= new FoursquareApp(getApplicationContext(), LoginActivity.CLIENT_ID, LoginActivity.CLIENT_SECRET);
         mAdapter		= new NearbyAdapter(getApplicationContext());
-        mListView		= (ListView) findViewById(R.id.lv_places);
+        mListView		= (ListView) findViewById(R.id.left_drawer);
 //        mNearbyList		= new ArrayList<Venue>();
         mAdapter.setData(myNearbyList);
         mListView.setAdapter(mAdapter);
@@ -446,27 +446,27 @@ public class MapsActivity extends Activity implements
 //    }
     
     
-    private void setupLocationListener() {
-    	// Create a new global location parameters object
-        mLocationRequest = LocationRequest.create();
-
-        /*
-         * Set the update interval
-         */
-        mLocationRequest.setInterval(LocationUtils.UPDATE_INTERVAL_IN_MILLISECONDS);
-
-        // Use high accuracy
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        // Set the interval ceiling to one minute
-        mLocationRequest.setFastestInterval(LocationUtils.FAST_INTERVAL_CEILING_IN_MILLISECONDS);
-
-        /*
-         * Create a new location client, using the enclosing class to
-         * handle callbacks.
-         */
-        mLocationClient = new LocationClient(this, this, this);
-    }
+//    private void setupLocationListener() {
+//    	// Create a new global location parameters object
+//        mLocationRequest = LocationRequest.create();
+//
+//        /*
+//         * Set the update interval
+//         */
+//        mLocationRequest.setInterval(LocationUtils.UPDATE_INTERVAL_IN_MILLISECONDS);
+//
+//        // Use high accuracy
+//        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+//
+//        // Set the interval ceiling to one minute
+//        mLocationRequest.setFastestInterval(LocationUtils.FAST_INTERVAL_CEILING_IN_MILLISECONDS);
+//
+//        /*
+//         * Create a new location client, using the enclosing class to
+//         * handle callbacks.
+//         */
+//        mLocationClient = new LocationClient(this, this, this);
+//    }
  
     /**
      * function to load map. If map is not created it will create it for you

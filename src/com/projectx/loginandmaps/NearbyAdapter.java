@@ -24,6 +24,7 @@ public class NearbyAdapter extends BaseAdapter {
 	private LayoutInflater mInflater;
 	private Context context;
 	private SharedPreferences mPrefs;
+	private static String DEFAULT_DESCRIPTIOIN = "Sorry, no relavent cards were found at this time :(";
 	
 	//Current location
 	private double lat;
@@ -83,7 +84,13 @@ public class NearbyAdapter extends BaseAdapter {
 		Location currentLocation = new Location("pratik");
 		currentLocation.setLatitude(lat);
 		currentLocation.setLongitude(lng);
-		holder.mDistanceTxt.setText(String.format("%.2f", currentLocation.distanceTo(placeLocation) * 0.000621371) + "mi");
+		double distance = currentLocation.distanceTo(placeLocation) * 0.000621371;
+		String dist = "";
+		if (distance < 0.3)
+			dist = String.format("%.1f", distance*5280) + " feet";
+		else
+			dist = String.format("%.2f", distance) + " miles";
+		holder.mDistanceTxt.setText(dist);
 		
 		String offers = "";
 		String query = MapsActivity.lastSearchQuery;
@@ -138,6 +145,8 @@ public class NearbyAdapter extends BaseAdapter {
 			}
 		}
 		
+		if (offers == "")
+			offers = DEFAULT_DESCRIPTIOIN;
 //		for (String type : place.types) {
 //			offers += type + "  ";
 //		}
