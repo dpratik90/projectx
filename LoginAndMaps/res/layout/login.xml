@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:fillViewport="true"
+  android:orientation="vertical">
+        
+        <!-- <LinearLayout android:id="@+id/header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@layout/header_gradient"
+                android:paddingTop="5dip"
+                android:paddingBottom="5dip"> -->
+       <!-- </LinearLayout> -->
+        <!--         
+                Logo Start
+
+	            <ImageView
+	                android:layout_width="fill_parent"
+	                android:layout_height="fill_parent"
+	                android:src="@drawable/logo" />
+
+                            android:layout_marginLeft="5dip"/>
+                Logo Ends
+        </LinearLayout>
+         Header Ends
+        Footer Start
+        <LinearLayout android:id="@+id/footer"
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="90dip"
+            android:background="#ffffff"
+            android:layout_alignParentBottom="true">
+        </LinearLayout>
+        Footer Ends
+ 
+        Login Form
+        <LinearLayout
+          android:orientation="vertical"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:padding="10dip"
+          android:layout_below="@id/header">
+           Email Label
+          <TextView android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#372c24"
+                android:text="Email"/>
+          <EditText android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dip"
+                android:layout_marginBottom="20dip"
+                android:singleLine="true"/>
+           Password Label
+          <TextView android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#372c24"
+                android:text="Password"/>
+          <EditText android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dip"
+                android:singleLine="true"
+                android:password="true"/>
+          Login button
+          <Button android:id="@+id/btnLogin"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dip"
+                android:text="Login"/>
+          Link to Registration Screen
+          <TextView android:id="@+id/link_to_register"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dip"
+                android:layout_marginBottom="40dip"
+                android:text="New to ProjectX? Register here"
+                android:gravity="center"
+                android:textSize="20dip"
+                android:textColor="#0b84aa"/> -->
+        <!-- Login Form Ends -->
+
+       	<Button
+       	    android:id="@+id/btnLogin"
+       	    android:layout_width="250dp"
+       	    android:layout_height="60dp"
+       	    android:layout_gravity="center_horizontal"
+       	    android:layout_marginBottom="30dp"
+       	    android:layout_marginLeft="70dp"
+       	    android:layout_marginRight="70dp"
+       	    android:layout_marginTop="150dp"
+       	    android:background="@drawable/foursquare" />
+
+       	<!-- android:layout_centerHorizontal="true"
+       	    android:layout_centerVertical="true" -->
+       	<!-- <fragment android:name="com.facebook.scrumptious.SelectionFragment"
+             android:id="@+id/selectionFragment"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content" /> -->
+        <com.facebook.widget.LoginButton
+            android:id="@+id/login_button"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="30dp" />
+   		<!--<fragment android:name="com.projectx.loginandmaps.SplashFragment"
+             android:id="@+id/splashFragment"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content" /> -->
+   		<!-- <fragment android:name="com.facebook.widget.UserSettingsFragment"
+             android:id="@+id/userSettingsFragment"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content" /> -->
+</LinearLayout>
